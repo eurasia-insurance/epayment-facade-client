@@ -18,7 +18,7 @@
 	<properties>
 		<!-- APIs -->
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
-		<lapsa-commons-lib.version>2.2-SNAPSHOT</lapsa-commons-lib.version>
+		<lapsa-commons.version>2.2-SNAPSHOT</lapsa-commons.version>
 		<!-- EJBs & WARs -->
 		<kkb-dao-impl-jpa.version>3.2-SNAPSHOT</kkb-dao-impl-jpa.version>
 		<kkb-services-impl-default.version>3.1-SNAPSHOT</kkb-services-impl-default.version>
@@ -45,12 +45,11 @@
 			</dependency>
 			<!-- internal lapsa-commons -->
 			<dependency>
-				<groupId>com.lapsa.lapsa-commons-lib</groupId>
+				<groupId>com.lapsa.lapsa.commons</groupId>
 				<artifactId>lapsa-commons</artifactId>
-				<version>${lapsa-commons-lib.version}</version>
+				<version>${lapsa-commons.version}</version>
 			</dependency>
 			<!-- runtime -->
-			<!-- internal kkb -->
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>
 				<artifactId>kkb-mesenger-impl-default</artifactId>
@@ -78,29 +77,24 @@
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-dao</artifactId>
 			<scope>compile</scope>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-mesenger</artifactId>
 			<scope>compile</scope>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-services</artifactId>
 			<scope>compile</scope>
-			<optional>true</optional>
 		</dependency>
 		<!-- internal lapsa-commons -->
 		<dependency>
-			<groupId>com.lapsa.lapsa-commons-lib</groupId>
+			<groupId>com.lapsa.lapsa.commons</groupId>
 			<artifactId>lapsa-commons</artifactId>
 			<scope>compile</scope>
-			<optional>true</optional>
 		</dependency>
 		<!-- runtime -->
-		<!-- internal kkb -->
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-mesenger-impl-default</artifactId>
@@ -124,7 +118,6 @@
 			<groupId>javax.enterprise</groupId>
 			<artifactId>cdi-api</artifactId>
 			<scope>provided</scope>
-			<optional>true</optional>
 		</dependency>
 	</dependencies>
 
