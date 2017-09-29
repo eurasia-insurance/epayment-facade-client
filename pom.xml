@@ -20,7 +20,7 @@
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
 		<lapsa-commons-lib.version>2.2-SNAPSHOT</lapsa-commons-lib.version>
 		<!-- EJBs & WARs -->
-		<kkb-dao-impl-jpa.version>3.1</kkb-dao-impl-jpa.version>
+		<kkb-dao-impl-jpa.version>3.2-SNAPSHOT</kkb-dao-impl-jpa.version>
 		<kkb-services-impl-default.version>3.1-SNAPSHOT</kkb-services-impl-default.version>
 		<kkb-mesenger-impl-default.version>4.1-SNAPSHOT</kkb-mesenger-impl-default.version>
 	</properties>
