@@ -8,7 +8,7 @@
 		<version>2.0</version>
 	</parent>
 
-	<groupId>com.lapsa.qazkom-lib</groupId>
+	<groupId>com.lapsa.qazkom</groupId>
 	<artifactId>qazkom-facade</artifactId>
 	<version>3.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
