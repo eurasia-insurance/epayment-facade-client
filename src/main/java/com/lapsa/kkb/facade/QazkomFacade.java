@@ -85,7 +85,7 @@ public class QazkomFacade {
 
 	    // validate signature
 	    try {
-		responseService.validateSignature(response);
+		responseService.validateSignature(response, true);
 	    } catch (KKBServiceError e) {
 		throw new RuntimeException("Internal error", e);
 	    } catch (KKBWrongSignature e) {
@@ -95,7 +95,7 @@ public class QazkomFacade {
 	    // find order by id
 	    KKBOrder order = null;
 	    try {
-		String orderId = responseService.parseOrderId(response);
+		String orderId = responseService.parseOrderId(response, true);
 		order = orderDAO.findByIdByPassCache(orderId);
 	    } catch (KKBEntityNotFound e) {
 		throw new IllegalArgumentException("No payment order found or reference is invlaid", e);
@@ -107,7 +107,7 @@ public class QazkomFacade {
 		throw new RuntimeException("There is no request for response found"); // fatal
 
 	    try {
-		responseService.validateResponse(order);
+		responseService.validateResponse(order, true);
 	    } catch (KKBValidationErrorException e) {
 		throw new IllegalArgumentException("Responce validation failed", e);
 	    }
@@ -137,12 +137,12 @@ public class QazkomFacade {
 		order.setStatus(KKBPaymentStatus.AUTHORIZATION_PASS);
 
 		// paid instant
-		Instant paymentInstant = responseService.parsePaymentTimestamp(response);
+		Instant paymentInstant = responseService.parsePaymentTimestamp(response, true);
 		order.setPaid(Date.from(paymentInstant));
 
 		// paid reference
-		String paymentReference = responseService.parsePaymentReferences(response);
-		order.setPaymentReference(responseService.parsePaymentReferences(response));
+		String paymentReference = responseService.parsePaymentReferences(response, true);
+		order.setPaymentReference(paymentReference);
 
 		handled = orderDAO.save(order);
 
@@ -151,18 +151,21 @@ public class QazkomFacade {
 			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
 			handled);
 
-		return new HandleResult(paymentReference, paymentInstant);
+		return new HandleResult(handled.getExternalId(), paymentReference, paymentInstant);
 
 	    }
 
 	    public final class HandleResult {
 
+		private final String externalId;
 		private final Instant instant;
 		private final String reference;
 
-		private HandleResult(final String paymentReference, final Instant paidInstant) {
-		    this.reference = paymentReference;
-		    this.instant = paidInstant;
+		private HandleResult(final String externalId, final String paymentReference,
+			final Instant paidInstant) {
+		    this.externalId = MyStrings.requireNonEmpty(externalId);
+		    this.reference = MyStrings.requireNonEmpty(paymentReference);
+		    this.instant = Objects.requireNonNull(paidInstant);
 		}
 
 		public Instant getInstant() {
@@ -171,6 +174,10 @@ public class QazkomFacade {
 
 		public String getReference() {
 		    return reference;
+		}
+
+		public String getExternalId() {
+		    return externalId;
 		}
 	    }
 	}
@@ -313,7 +320,7 @@ public class QazkomFacade {
 		private final String reference;
 
 		private AcceptResult(final String reference) {
-		    this.reference = reference;
+		    this.reference = MyStrings.requireNonEmpty(reference);
 		}
 
 		public String getReference() {
