@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.lapsa.maven.pom</groupId>
+		<artifactId>javaee7-app-parent</artifactId>
+		<version>2.0</version>
+	</parent>
+
+	<groupId>com.lapsa.qazkom-lib</groupId>
+	<artifactId>qazkom-facade</artifactId>
+	<version>3.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>Qazkom Lib : Facade</name>
+
+	<properties>
+		<!-- APIs -->
+		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
+		<lapsa-commons-lib.version>2.2-SNAPSHOT</lapsa-commons-lib.version>
+		<!-- EJBs & WARs -->
+		<kkb-dao-impl-jpa.version>3.1</kkb-dao-impl-jpa.version>
+		<kkb-services-impl-default.version>3.1-SNAPSHOT</kkb-services-impl-default.version>
+		<kkb-mesenger-impl-default.version>4.1-SNAPSHOT</kkb-mesenger-impl-default.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- internal kkb -->
+			<dependency>
+				<groupId>com.lapsa.kkb-lib</groupId>
+				<artifactId>kkb-dao</artifactId>
+				<version>${kkb-lib.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.lapsa.kkb-lib</groupId>
+				<artifactId>kkb-mesenger</artifactId>
+				<version>${kkb-lib.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.lapsa.kkb-lib</groupId>
+				<artifactId>kkb-services</artifactId>
+				<version>${kkb-lib.version}</version>
+			</dependency>
+			<!-- internal lapsa-commons -->
+			<dependency>
+				<groupId>com.lapsa.lapsa-commons-lib</groupId>
+				<artifactId>lapsa-commons</artifactId>
+				<version>${lapsa-commons-lib.version}</version>
+			</dependency>
+			<!-- runtime -->
+			<!-- internal kkb -->
+			<dependency>
+				<groupId>com.lapsa.kkb-lib</groupId>
+				<artifactId>kkb-mesenger-impl-default</artifactId>
+				<version>${kkb-mesenger-impl-default.version}</version>
+				<type>ejb</type>
+			</dependency>
+			<dependency>
+				<groupId>com.lapsa.kkb-lib</groupId>
+				<artifactId>kkb-dao-impl-jpa</artifactId>
+				<version>${kkb-dao-impl-jpa.version}</version>
+				<type>ejb</type>
+			</dependency>
+			<dependency>
+				<groupId>com.lapsa.kkb-lib</groupId>
+				<artifactId>kkb-services-impl-default</artifactId>
+				<version>${kkb-services-impl-default.version}</version>
+				<type>ejb</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- internal kkb -->
+		<dependency>
+			<groupId>com.lapsa.kkb-lib</groupId>
+			<artifactId>kkb-dao</artifactId>
+			<scope>compile</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.lapsa.kkb-lib</groupId>
+			<artifactId>kkb-mesenger</artifactId>
+			<scope>compile</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.lapsa.kkb-lib</groupId>
+			<artifactId>kkb-services</artifactId>
+			<scope>compile</scope>
+			<optional>true</optional>
+		</dependency>
+		<!-- internal lapsa-commons -->
+		<dependency>
+			<groupId>com.lapsa.lapsa-commons-lib</groupId>
+			<artifactId>lapsa-commons</artifactId>
+			<scope>compile</scope>
+			<optional>true</optional>
+		</dependency>
+		<!-- runtime -->
+		<!-- internal kkb -->
+		<dependency>
+			<groupId>com.lapsa.kkb-lib</groupId>
+			<artifactId>kkb-mesenger-impl-default</artifactId>
+			<type>ejb</type>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.lapsa.kkb-lib</groupId>
+			<artifactId>kkb-dao-impl-jpa</artifactId>
+			<type>ejb</type>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.lapsa.kkb-lib</groupId>
+			<artifactId>kkb-services-impl-default</artifactId>
+			<type>ejb</type>
+			<scope>runtime</scope>
+		</dependency>
+		<!-- JavaEE -->
+		<dependency>
+			<groupId>javax.enterprise</groupId>
+			<artifactId>cdi-api</artifactId>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
+
+	<scm>
+		<connection>scm:git:https://gitlab.lapsa.tech/lapsa/qazkom/facade.git</connection>
+		<developerConnection>scm:git:https://gitlab.lapsa.tech/qazkom/kkb/facade.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
+	<issueManagement>
+		<system>gitlab</system>
+		<url>https://gitlab.lapsa.tech/lapsa/qazkom/facade/issues</url>
+	</issueManagement>
+
+</project>
