@@ -1,5 +1,6 @@
 package com.lapsa.kkb.facade;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,7 +15,10 @@ import com.lapsa.commons.function.MyStrings;
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
+import com.lapsa.kkb.core.KKBPaymentRequestDocument;
+import com.lapsa.kkb.core.KKBPaymentResponseDocument;
 import com.lapsa.kkb.core.KKBPaymentStatus;
+import com.lapsa.kkb.dao.KKBEntityNotFound;
 import com.lapsa.kkb.dao.KKBOrderDAO;
 import com.lapsa.kkb.mesenger.KKBNotificationChannel;
 import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
@@ -22,6 +26,11 @@ import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
 import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBDocumentComposerService;
 import com.lapsa.kkb.services.KKBFactory;
+import com.lapsa.kkb.services.KKBFormatException;
+import com.lapsa.kkb.services.KKBResponseService;
+import com.lapsa.kkb.services.KKBServiceError;
+import com.lapsa.kkb.services.KKBValidationErrorException;
+import com.lapsa.kkb.services.KKBWrongSignature;
 
 @ApplicationScoped
 public class QazkomFacade {
@@ -30,10 +39,13 @@ public class QazkomFacade {
     private KKBDocumentComposerService composer;
 
     @Inject
+    private KKBResponseService responseService;
+
+    @Inject
     private KKBFactory factory;
 
     @Inject
-    private KKBOrderDAO dao;
+    private KKBOrderDAO orderDAO;
 
     @Inject
     private KKBNotifier notifier;
@@ -41,6 +53,130 @@ public class QazkomFacade {
     public PaymentBuilder newPaymentBuilder() {
 	return new PaymentBuilder();
     }
+
+    public ResponseBuilder newResponseBuilder() {
+	return new ResponseBuilder();
+    }
+
+    public final class ResponseBuilder {
+
+	private String responseXml;
+
+	private ResponseBuilder() {
+	}
+
+	public ResponseBuilder withXml(String responseXml) {
+	    this.responseXml = responseXml;
+	    return this;
+	}
+
+	public Response build() {
+
+	    KKBPaymentResponseDocument response = new KKBPaymentResponseDocument();
+	    response.setCreated(new Date());
+	    response.setContent(MyStrings.requireNonEmpty(responseXml, "Response is empty"));
+
+	    // verify format
+	    try {
+		responseService.validateResponseXmlFormat(response);
+	    } catch (KKBFormatException e) {
+		throw new IllegalArgumentException("Wrong xml format", e);
+	    }
+
+	    // validate signature
+	    try {
+		responseService.validateSignature(response);
+	    } catch (KKBServiceError e) {
+		throw new RuntimeException("Internal error", e);
+	    } catch (KKBWrongSignature e) {
+		throw new IllegalArgumentException("Wrong signature", e);
+	    }
+
+	    // find order by id
+	    KKBOrder order = null;
+	    try {
+		String orderId = responseService.parseOrderId(response);
+		order = orderDAO.findByIdByPassCache(orderId);
+	    } catch (KKBEntityNotFound e) {
+		throw new IllegalArgumentException("No payment order found or reference is invlaid", e);
+	    }
+
+	    // validate response to request
+	    KKBPaymentRequestDocument request = order.getLastRequest();
+	    if (request == null)
+		throw new RuntimeException("There is no request for response found"); // fatal
+
+	    try {
+		responseService.validateResponse(order);
+	    } catch (KKBValidationErrorException e) {
+		throw new IllegalArgumentException("Responce validation failed", e);
+	    }
+
+	    return new Response(response, order);
+	}
+
+	public final class Response {
+	    private final KKBPaymentResponseDocument response;
+	    private final KKBOrder order;
+
+	    private KKBOrder handled;
+
+	    private Response(final KKBPaymentResponseDocument response, final KKBOrder order) {
+		this.order = Objects.requireNonNull(order);
+		this.response = Objects.requireNonNull(response);
+	    }
+
+	    public HandleResult handle() {
+		if (handled != null)
+		    throw new IllegalStateException("Already handled");
+
+		// attach response
+		order.setLastResponse(response);
+
+		// set order status
+		order.setStatus(KKBPaymentStatus.AUTHORIZATION_PASS);
+
+		// paid instant
+		Instant paymentInstant = responseService.parsePaymentTimestamp(response);
+		order.setPaid(Date.from(paymentInstant));
+
+		// paid reference
+		String paymentReference = responseService.parsePaymentReferences(response);
+		order.setPaymentReference(responseService.parsePaymentReferences(response));
+
+		handled = orderDAO.save(order);
+
+		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
+			KKBNotificationRecipientType.REQUESTER, //
+			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
+			handled);
+
+		return new HandleResult(paymentReference, paymentInstant);
+
+	    }
+
+	    public final class HandleResult {
+
+		private final Instant instant;
+		private final String reference;
+
+		private HandleResult(final String paymentReference, final Instant paidInstant) {
+		    this.reference = paymentReference;
+		    this.instant = paidInstant;
+		}
+
+		public Instant getInstant() {
+		    return instant;
+		}
+
+		public String getReference() {
+		    return reference;
+		}
+	    }
+	}
+    }
+
+    //
 
     public final class PaymentBuilder {
 	private List<BuilderItem> items = new ArrayList<>();
@@ -50,7 +186,6 @@ public class QazkomFacade {
 	private String name;
 	private String externalId;
 	private FinCurrency currency;
-	private KKBOrder accepted;
 
 	private PaymentBuilder() {
 	}
@@ -118,16 +253,19 @@ public class QazkomFacade {
 	    return this;
 	}
 
-	public AcceptResult accept() {
-	    return new AcceptResult(acceptAndReply().getId());
+	private final class BuilderItem {
+	    private final String product;
+	    private final double cost;
+	    private final int quantity;
+
+	    private BuilderItem(String product, double cost, int quantity) {
+		this.product = MyStrings.requireNonEmpty(product, "product");
+		this.cost = MyNumbers.requireNonZero(cost, "cost");
+		this.quantity = MyNumbers.requireNonZero(quantity, "quantity");
+	    }
 	}
 
-	// PRIVATE
-
-	private KKBOrder acceptAndReply() {
-	    if (accepted != null)
-		throw new IllegalStateException("Already acceted");
-
+	public Payment build() {
 	    KKBOrder o = new KKBOrder();
 	    o.setId(MyStrings.requireNonEmpty(orderId, "orderId"));
 	    o.setCreated(new Date());
@@ -142,41 +280,47 @@ public class QazkomFacade {
 		    .stream() //
 		    .forEach(x -> factory.generateNewOrderItem(x.product, x.cost, x.quantity, o));
 
-	    composer.composeCart(o);
-	    composer.composeRequest(o);
-
-	    accepted = dao.save(o);
-
-	    notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
-		    KKBNotificationRecipientType.REQUESTER, //
-		    KKBNotificationRequestStage.PAYMENT_LINK, accepted);
-
-	    return accepted;
+	    return new Payment(o);
 	}
 
-	private final class BuilderItem {
-	    private final String product;
-	    private final double cost;
-	    private final int quantity;
+	public final class Payment {
 
-	    private BuilderItem(String product, double cost, int quantity) {
-		this.product = MyStrings.requireNonEmpty(product, "product");
-		this.cost = MyNumbers.requireNonZero(cost, "cost");
-		this.quantity = MyNumbers.requireNonZero(quantity, "quantity");
+	    private final KKBOrder order;
+	    private KKBOrder accepted;
+
+	    private Payment(KKBOrder order) {
+		this.order = Objects.requireNonNull(order);
 	    }
+
+	    public AcceptResult accept() {
+		if (accepted != null)
+		    throw new IllegalStateException("Already acceted");
+
+		composer.composeCart(order);
+		composer.composeRequest(order);
+
+		accepted = orderDAO.save(order);
+
+		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
+			KKBNotificationRecipientType.REQUESTER, //
+			KKBNotificationRequestStage.PAYMENT_LINK, //
+			accepted);
+
+		return new AcceptResult(accepted.getId());
+	    }
+
+	    public final class AcceptResult {
+		private final String reference;
+
+		private AcceptResult(final String reference) {
+		    this.reference = reference;
+		}
+
+		public String getReference() {
+		    return reference;
+		}
+	    }
+
 	}
-
-	public final class AcceptResult {
-	    private final String reference;
-
-	    private AcceptResult(String reference) {
-		this.reference = reference;
-	    }
-
-	    public String getReference() {
-		return reference;
-	    }
-	}
-
     }
 }
