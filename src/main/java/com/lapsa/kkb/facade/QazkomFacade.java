@@ -38,10 +38,6 @@ public class QazkomFacade {
     @Inject
     private KKBNotifier notifier;
 
-    public String generateId() {
-	return factory.generateNewOrderId();
-    }
-
     public PaymentBuilder newPaymentBuilder() {
 	return new PaymentBuilder();
     }
