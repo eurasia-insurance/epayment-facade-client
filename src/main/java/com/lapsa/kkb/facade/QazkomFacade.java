@@ -2,7 +2,6 @@ package com.lapsa.kkb.facade;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -73,7 +72,7 @@ public class QazkomFacade {
 	public Response build() {
 
 	    KKBPaymentResponseDocument response = new KKBPaymentResponseDocument();
-	    response.setCreated(new Date());
+	    response.setCreated(Instant.now());
 	    response.setContent(MyStrings.requireNonEmpty(responseXml, "Response is empty"));
 
 	    // verify format
@@ -138,7 +137,7 @@ public class QazkomFacade {
 
 		// paid instant
 		Instant paymentInstant = responseService.parsePaymentTimestamp(response, true);
-		order.setPaid(Date.from(paymentInstant));
+		order.setPaid(paymentInstant);
 
 		// paid reference
 		String paymentReference = responseService.parsePaymentReferences(response, true);
@@ -275,7 +274,7 @@ public class QazkomFacade {
 	public Payment build() {
 	    KKBOrder o = new KKBOrder();
 	    o.setId(MyStrings.requireNonEmpty(orderId, "orderId"));
-	    o.setCreated(new Date());
+	    o.setCreated(Instant.now());
 	    o.setStatus(KKBPaymentStatus.NEW);
 	    o.setCurrency(Objects.requireNonNull(currency, "currency"));
 	    o.setConsumerEmail(MyStrings.requireNonEmpty(email, "email"));
