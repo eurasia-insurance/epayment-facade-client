@@ -272,8 +272,7 @@ public class QazkomFacade {
 	}
 
 	public Payment build() {
-	    KKBOrder o = new KKBOrder();
-	    o.setId(MyStrings.requireNonEmpty(orderId, "orderId"));
+	    KKBOrder o = new KKBOrder(MyStrings.requireNonEmpty(orderId, "orderId"));
 	    o.setCreated(Instant.now());
 	    o.setStatus(KKBPaymentStatus.NEW);
 	    o.setCurrency(Objects.requireNonNull(currency, "currency"));
