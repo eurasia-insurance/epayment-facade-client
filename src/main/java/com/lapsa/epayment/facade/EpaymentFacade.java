@@ -133,8 +133,8 @@ public class EpaymentFacade {
 	    private KKBOrder handled;
 
 	    private Response(final KKBPaymentResponseDocument response, final KKBOrder order) {
-		this.order = MyObjects.requireNonNull(order);
-		this.response = MyObjects.requireNonNull(response);
+		this.order = MyObjects.requireNonNull(order, "order");
+		this.response = MyObjects.requireNonNull(response, "response");
 	    }
 
 	    public Ebill handle() {
@@ -233,12 +233,12 @@ public class EpaymentFacade {
 	}
 
 	public PaymentBuilder withExternalId(String externalId) {
-	    this.externalId = MyStrings.requireNonEmpty(externalId);
+	    this.externalId = MyStrings.requireNonEmpty(externalId, "externalId");
 	    return this;
 	}
 
 	public PaymentBuilder withExternalId(Integer externalId) {
-	    this.externalId = MyNumbers.requireNonZero(externalId).toString();
+	    this.externalId = MyNumbers.requireNonZero(externalId, "externalId").toString();
 	    return this;
 	}
 
@@ -269,7 +269,7 @@ public class EpaymentFacade {
 	    o.setConsumerName(MyStrings.requireNonEmpty(name, "name"));
 	    o.setExternalId(externalId);
 
-	    MyCollections.requireNonEmpty(items, "items is empty") //
+	    MyCollections.requireNonEmpty(items, "items") //
 		    .stream() //
 		    .forEach(x -> factory.generateNewOrderItem(x.product, x.cost, x.quantity, o));
 
@@ -282,7 +282,7 @@ public class EpaymentFacade {
 	    private KKBOrder accepted;
 
 	    private Payment(KKBOrder order) {
-		this.order = MyObjects.requireNonNull(order);
+		this.order = MyObjects.requireNonNull(order, "order");
 	    }
 
 	    public Ebill accept() {
@@ -450,15 +450,15 @@ public class EpaymentFacade {
 	    this.id = MyStrings.requireNonEmpty(id, "id");
 	    this.externalId = externalId;
 	    this.status = MyObjects.requireNonNull(status, "status");
-	    this.created = MyObjects.requireNonNull(created);
+	    this.created = MyObjects.requireNonNull(created, "created");
 	    this.amount = MyNumbers.requireNonZero(amount, "amount");
 	    this.consumerLanguage = MyObjects.requireNonNull(consumerLanguage, "userLanguage");
-	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail);
-	    this.consumerName = MyStrings.requireNonEmpty(consumerName);
+	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
+	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
 
-	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items));
+	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
 
-	    this.form = MyObjects.requireNonNull(form);
+	    this.form = MyObjects.requireNonNull(form, "form");
 
 	    this.paid = null;
 	    this.reference = null;
@@ -477,18 +477,18 @@ public class EpaymentFacade {
 	    this.id = MyStrings.requireNonEmpty(id, "id");
 	    this.externalId = externalId;
 	    this.status = MyObjects.requireNonNull(status, "status");
-	    this.created = MyObjects.requireNonNull(created);
+	    this.created = MyObjects.requireNonNull(created, "created");
 	    this.amount = MyNumbers.requireNonZero(amount, "amount");
 	    this.consumerLanguage = MyObjects.requireNonNull(userLanguage, "userLanguage");
-	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail);
-	    this.consumerName = MyStrings.requireNonEmpty(consumerName);
+	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
+	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
 
-	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items));
+	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
 
 	    this.form = null;
 
-	    this.paid = MyObjects.requireNonNull(paid);
-	    this.reference = MyStrings.requireNonEmpty(reference);
+	    this.paid = MyObjects.requireNonNull(paid, "paid");
+	    this.reference = MyStrings.requireNonEmpty(reference, "reference");
 	}
 
 	public String getId() {
@@ -553,8 +553,8 @@ public class EpaymentFacade {
 
 	HttpFormTemplate(URL url, String method, Map<String, String> params) {
 	    this.url = MyObjects.requireNonNull(url, "url");
-	    this.method = MyStrings.requireNonEmpty(method);
-	    this.params = Collections.unmodifiableMap(MyMaps.requireNonEmpty(MyObjects.requireNonNull(params)));
+	    this.method = MyStrings.requireNonEmpty(method, "method");
+	    this.params = Collections.unmodifiableMap(MyMaps.requireNonEmpty(params, "params"));
 	}
 
 	public URL getURL() {
@@ -577,9 +577,9 @@ public class EpaymentFacade {
 	private final Integer quantity;
 
 	private EbillItem(String name, Double amount, Integer quantity) {
-	    this.name = MyStrings.requireNonEmpty(name);
-	    this.amount = MyNumbers.requireNonZero(amount);
-	    this.quantity = MyNumbers.requireNonZero(quantity);
+	    this.name = MyStrings.requireNonEmpty(name, "name");
+	    this.amount = MyNumbers.requireNonZero(amount, "amount");
+	    this.quantity = MyNumbers.requireNonZero(quantity, "quantity");
 	}
 
 	public String getName() {
