@@ -100,18 +100,21 @@
 			<artifactId>kkb-mesenger-impl-default</artifactId>
 			<type>ejb</type>
 			<scope>runtime</scope>
+			<optional>false</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-dao-impl-jpa</artifactId>
 			<type>ejb</type>
 			<scope>runtime</scope>
+			<optional>false</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-services-impl-default</artifactId>
 			<type>ejb</type>
 			<scope>runtime</scope>
+			<optional>false</optional>
 		</dependency>
 		<!-- JavaEE -->
 		<dependency>
