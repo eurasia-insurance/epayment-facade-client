@@ -1,15 +1,21 @@
 package com.lapsa.kkb.facade;
 
+import java.net.URI;
+import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import com.lapsa.commons.function.MyCollections;
+import com.lapsa.commons.function.MyMaps;
 import com.lapsa.commons.function.MyNumbers;
+import com.lapsa.commons.function.MyObjects;
 import com.lapsa.commons.function.MyStrings;
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
@@ -24,6 +30,7 @@ import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
 import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
 import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBDocumentComposerService;
+import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFactory;
 import com.lapsa.kkb.services.KKBFormatException;
 import com.lapsa.kkb.services.KKBResponseService;
@@ -39,6 +46,9 @@ public class QazkomFacade {
 
     @Inject
     private KKBResponseService responseService;
+
+    @Inject
+    private KKBEpayConfigurationService epayConfig;
 
     @Inject
     private KKBFactory factory;
@@ -121,11 +131,11 @@ public class QazkomFacade {
 	    private KKBOrder handled;
 
 	    private Response(final KKBPaymentResponseDocument response, final KKBOrder order) {
-		this.order = Objects.requireNonNull(order);
-		this.response = Objects.requireNonNull(response);
+		this.order = MyObjects.requireNonNull(order);
+		this.response = MyObjects.requireNonNull(response);
 	    }
 
-	    public HandleResult handle() {
+	    public Ebill handle() {
 		if (handled != null)
 		    throw new IllegalStateException("Already handled");
 
@@ -150,35 +160,11 @@ public class QazkomFacade {
 			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
 			handled);
 
-		return new HandleResult(handled.getExternalId(), paymentReference, paymentInstant);
-
+		return new EbillBuilder() //
+			.withKKBOrder(order)
+			.build();
 	    }
 
-	    public final class HandleResult {
-
-		private final String externalId;
-		private final Instant instant;
-		private final String reference;
-
-		private HandleResult(final String externalId, final String paymentReference,
-			final Instant paidInstant) {
-		    this.externalId = MyStrings.requireNonEmpty(externalId);
-		    this.reference = MyStrings.requireNonEmpty(paymentReference);
-		    this.instant = Objects.requireNonNull(paidInstant);
-		}
-
-		public Instant getInstant() {
-		    return instant;
-		}
-
-		public String getReference() {
-		    return reference;
-		}
-
-		public String getExternalId() {
-		    return externalId;
-		}
-	    }
 	}
     }
 
@@ -255,7 +241,7 @@ public class QazkomFacade {
 	}
 
 	public PaymentBuilder withConsumerLanguage(LocalizationLanguage language) {
-	    this.language = Objects.requireNonNull(language, "language");
+	    this.language = MyObjects.requireNonNull(language, "language");
 	    return this;
 	}
 
@@ -275,9 +261,9 @@ public class QazkomFacade {
 	    KKBOrder o = new KKBOrder(MyStrings.requireNonEmpty(orderId, "orderId"));
 	    o.setCreated(Instant.now());
 	    o.setStatus(KKBPaymentStatus.NEW);
-	    o.setCurrency(Objects.requireNonNull(currency, "currency"));
+	    o.setCurrency(MyObjects.requireNonNull(currency, "currency"));
 	    o.setConsumerEmail(MyStrings.requireNonEmpty(email, "email"));
-	    o.setConsumerLanguage(Objects.requireNonNull(language, "language"));
+	    o.setConsumerLanguage(MyObjects.requireNonNull(language, "language"));
 	    o.setConsumerName(MyStrings.requireNonEmpty(name, "name"));
 	    o.setExternalId(externalId);
 
@@ -294,10 +280,10 @@ public class QazkomFacade {
 	    private KKBOrder accepted;
 
 	    private Payment(KKBOrder order) {
-		this.order = Objects.requireNonNull(order);
+		this.order = MyObjects.requireNonNull(order);
 	    }
 
-	    public AcceptResult accept() {
+	    public Ebill accept() {
 		if (accepted != null)
 		    throw new IllegalStateException("Already acceted");
 
@@ -311,21 +297,299 @@ public class QazkomFacade {
 			KKBNotificationRequestStage.PAYMENT_LINK, //
 			accepted);
 
-		return new AcceptResult(accepted.getId());
+		return new EbillBuilder() //
+			.withKKBOrder(order)
+			.build();
+	    }
+	}
+    }
+
+    public EbillBuilder newEbillBuilder() {
+	return new EbillBuilder();
+    }
+
+    public final class EbillBuilder {
+	private EbillBuilder() {
+	}
+
+	private String id;
+	private String externalId;
+	private EbillStatus status;
+	private Instant created;
+	private Double amount;
+	private LocalizationLanguage consumerLanguage;
+	private String consumerEmail;
+
+	private Instant paid;
+	private String reference;
+
+	private List<EbillItem> items;
+
+	private Ebill ebill;
+	private String requestContent;
+	private String consumerName;
+	private String requestAppendix;
+	private URI postbackURI;
+
+	public EbillBuilder withFetched(String id) {
+	    try {
+		KKBOrder kkbOrder = orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id"));
+		return withKKBOrder(kkbOrder);
+	    } catch (KKBEntityNotFound e) {
+		throw new IllegalArgumentException("not found", e);
 	    }
 
-	    public final class AcceptResult {
-		private final String reference;
+	}
 
-		private AcceptResult(final String reference) {
-		    this.reference = MyStrings.requireNonEmpty(reference);
-		}
+	public EbillBuilder withPostbackURI(URI postbackURI) {
+	    this.postbackURI = postbackURI;
+	    return this;
+	}
 
-		public String getReference() {
-		    return reference;
-		}
+	private EbillBuilder withKKBOrder(KKBOrder kkbOrder) {
+	    this.id = kkbOrder.getId();
+	    this.externalId = kkbOrder.getExternalId();
+	    this.created = kkbOrder.getCreated();
+	    this.amount = kkbOrder.getAmount();
+	    this.consumerLanguage = kkbOrder.getConsumerLanguage();
+	    this.consumerEmail = kkbOrder.getConsumerEmail();
+	    this.consumerName = kkbOrder.getConsumerName();
+
+	    this.items = kkbOrder.getItems().stream() //
+		    .map(x -> new EbillItem(x.getName(), x.getCost(), x.getQuantity()))
+		    .collect(Collectors.toList());
+
+	    this.requestContent = kkbOrder.getLastRequest().getContentBase64();
+	    this.requestAppendix = kkbOrder.getLastCart().getContentBase64();
+	    this.paid = kkbOrder.getPaid();
+	    this.reference = kkbOrder.getPaymentReference();
+
+	    switch (kkbOrder.getStatus()) {
+	    case NEW:
+		this.status = EbillStatus.READY;
+		break;
+	    case AUTHORIZATION_FAILED:
+		this.status = EbillStatus.FAILED;
+		break;
+	    case CANCELED:
+		this.status = EbillStatus.CANCELED;
+		break;
+	    case COMPLETED:
+	    case AUTHORIZATION_PASS:
+	    case ENROLLED:
+		this.status = EbillStatus.PAID;
+		break;
+	    default:
 	    }
+	    return this;
+	}
 
+	public Ebill build() {
+	    if (ebill != null)
+		throw new IllegalStateException("Already built");
+	    switch (status) {
+	    case READY:
+		HttpFormTemplate form = new HttpFormTemplate(epayConfig.getEpayURL(), "POST",
+			MyMaps.of( //
+				"Signed_Order_B64", requestContent, //
+				"template", epayConfig.getTemplateName(), //
+				"email", consumerEmail, //
+				"PostLink", postbackURI.toString(), // TODO move
+								    // QAZKOM WS
+								    // POSTBACK
+								    // to own
+				"Language", "%%LANGUAGE_TAG%%", //
+				"appendix", requestAppendix, //
+				"BackLink", "%%PAYMENT_PAGE_URL%%" //
+			));
+		ebill = new Ebill(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
+			consumerName, items,
+			form);
+		break;
+	    case PAID:
+		ebill = new Ebill(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
+			consumerName, items,
+			paid,
+			reference);
+	    default:
+	    }
+	    return ebill;
+	}
+
+    }
+
+    public final class Ebill {
+
+	private final String id;
+	private final String externalId;
+	private final EbillStatus status;
+	private final Instant created;
+	private final Double amount;
+	private final LocalizationLanguage consumerLanguage;
+	private final String consumerEmail;
+	private final String consumerName;
+
+	private final List<EbillItem> items;
+
+	private final HttpFormTemplate form;
+
+	private final Instant paid;
+	private final String reference;
+
+	// constructor for unpayed ebill
+	private Ebill(final String id, final String externalId, final EbillStatus status, final Instant created,
+		final Double amount,
+		final LocalizationLanguage consumerLanguage, final String consumerEmail, final String consumerName,
+		List<EbillItem> items, HttpFormTemplate form) {
+
+	    if (status != EbillStatus.READY)
+		throw new IllegalArgumentException("Invalid status");
+
+	    this.id = MyStrings.requireNonEmpty(id, "id");
+	    this.externalId = externalId;
+	    this.status = MyObjects.requireNonNull(status, "status");
+	    this.created = MyObjects.requireNonNull(created);
+	    this.amount = MyNumbers.requireNonZero(amount, "amount");
+	    this.consumerLanguage = MyObjects.requireNonNull(consumerLanguage, "userLanguage");
+	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail);
+	    this.consumerName = MyStrings.requireNonEmpty(consumerName);
+
+	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items));
+
+	    this.form = MyObjects.requireNonNull(form);
+
+	    this.paid = null;
+	    this.reference = null;
+	}
+
+	// constructor for payed ebill
+	private Ebill(final String id, final String externalId, final EbillStatus status, final Instant created,
+		final Double amount,
+		final LocalizationLanguage userLanguage, final String consumerEmail, final String consumerName,
+		final List<EbillItem> items, final Instant paid,
+		final String reference) {
+
+	    if (status != EbillStatus.PAID)
+		throw new IllegalArgumentException("Invalid status");
+
+	    this.id = MyStrings.requireNonEmpty(id, "id");
+	    this.externalId = externalId;
+	    this.status = MyObjects.requireNonNull(status, "status");
+	    this.created = MyObjects.requireNonNull(created);
+	    this.amount = MyNumbers.requireNonZero(amount, "amount");
+	    this.consumerLanguage = MyObjects.requireNonNull(userLanguage, "userLanguage");
+	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail);
+	    this.consumerName = MyStrings.requireNonEmpty(consumerName);
+
+	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items));
+
+	    this.form = null;
+
+	    this.paid = MyObjects.requireNonNull(paid);
+	    this.reference = MyStrings.requireNonEmpty(reference);
+	}
+
+	public String getId() {
+	    return id;
+	}
+
+	public EbillStatus getStatus() {
+	    return status;
+	}
+
+	public Instant getCreated() {
+	    return created;
+	}
+
+	public Double getAmount() {
+	    return amount;
+	}
+
+	public LocalizationLanguage getConsumerLanguage() {
+	    return consumerLanguage;
+	}
+
+	public List<EbillItem> getItems() {
+	    return items;
+	}
+
+	public HttpFormTemplate getForm() {
+	    return form;
+	}
+
+	public Instant getPaid() {
+	    return paid;
+	}
+
+	public String getReference() {
+	    return reference;
+	}
+
+	public String getConsumerEmail() {
+	    return consumerEmail;
+	}
+
+	public String getConsumerName() {
+	    return consumerName;
+	}
+
+	public String getExternalId() {
+	    return externalId;
+	}
+
+    }
+
+    public static enum EbillStatus {
+	READY, CANCELED, PAID, FAILED
+    }
+
+    public static class HttpFormTemplate {
+
+	private final URL url;
+	private final String method;
+	private final Map<String, String> params;
+
+	HttpFormTemplate(URL url, String method, Map<String, String> params) {
+	    this.url = MyObjects.requireNonNull(url, "url");
+	    this.method = MyStrings.requireNonEmpty(method);
+	    this.params = Collections.unmodifiableMap(MyMaps.requireNonEmpty(MyObjects.requireNonNull(params)));
+	}
+
+	public URL getURL() {
+	    return url;
+	}
+
+	public String getMethod() {
+	    return method;
+	}
+
+	public Map<String, String> getParams() {
+	    return params;
+	}
+    }
+
+    public final class EbillItem {
+
+	private final String name;
+	private final Double amount;
+	private final Integer quantity;
+
+	private EbillItem(String name, Double amount, Integer quantity) {
+	    this.name = MyStrings.requireNonEmpty(name);
+	    this.amount = MyNumbers.requireNonZero(amount);
+	    this.quantity = MyNumbers.requireNonZero(quantity);
+	}
+
+	public String getName() {
+	    return name;
+	}
+
+	public Double getAmount() {
+	    return amount;
+	}
+
+	public Integer getQuantity() {
+	    return quantity;
 	}
     }
 }
