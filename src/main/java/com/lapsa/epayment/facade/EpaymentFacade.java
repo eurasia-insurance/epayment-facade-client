@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import com.lapsa.commons.function.MyCollections;
@@ -38,7 +39,8 @@ import com.lapsa.kkb.services.KKBServiceError;
 import com.lapsa.kkb.services.KKBValidationErrorException;
 import com.lapsa.kkb.services.KKBWrongSignature;
 
-@ApplicationScoped
+@Stateless
+@LocalBean
 public class EpaymentFacade {
 
     @Inject

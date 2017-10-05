@@ -11,7 +11,7 @@
 	<groupId>com.lapsa.epayment</groupId>
 	<artifactId>epayment-facade</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>ejb</packaging>
 
 	<name>Epayment Lib : Facade</name>
 
@@ -120,6 +120,11 @@
 		<dependency>
 			<groupId>javax.enterprise</groupId>
 			<artifactId>cdi-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.ejb</groupId>
+			<artifactId>javax.ejb-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
