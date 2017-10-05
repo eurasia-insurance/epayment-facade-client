@@ -19,6 +19,7 @@
 		<!-- APIs -->
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
 		<lapsa-commons.version>2.2-SNAPSHOT</lapsa-commons.version>
+		<epayment-templates.version>4.0-SNAPSHOT</epayment-templates.version>
 		<!-- EJBs & WARs -->
 		<kkb-dao-impl-jpa.version>3.2-SNAPSHOT</kkb-dao-impl-jpa.version>
 		<kkb-services-impl-default.version>3.1-SNAPSHOT</kkb-services-impl-default.version>
@@ -27,6 +28,12 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- internal epayment -->
+			<dependency>
+				<groupId>com.lapsa.epayment</groupId>
+				<artifactId>epayment-templates</artifactId>
+				<version>${epayment-templates.version}</version>
+			</dependency>
 			<!-- internal kkb -->
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>
@@ -72,6 +79,13 @@
 	</dependencyManagement>
 
 	<dependencies>
+		<!-- internal epayment -->
+		<dependency>
+			<groupId>com.lapsa.epayment</groupId>
+			<artifactId>epayment-templates</artifactId>
+			<scope>compile</scope>
+			<optional>false</optional>
+		</dependency>
 		<!-- internal kkb -->
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
