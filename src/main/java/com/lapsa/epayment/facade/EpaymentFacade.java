@@ -1,4 +1,4 @@
-package com.lapsa.kkb.facade;
+package com.lapsa.epayment.facade;
 
 import java.net.URI;
 import java.net.URL;
@@ -39,7 +39,7 @@ import com.lapsa.kkb.services.KKBValidationErrorException;
 import com.lapsa.kkb.services.KKBWrongSignature;
 
 @ApplicationScoped
-public class QazkomFacade {
+public class EpaymentFacade {
 
     @Inject
     private KKBDocumentComposerService composer;
