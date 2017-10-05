@@ -8,7 +8,7 @@
 		<version>3.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.lapsa.epayment</groupId>
+	<groupId>tech.lapsa.epayment</groupId>
 	<artifactId>epayment-facade</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>ejb</packaging>
@@ -30,7 +30,7 @@
 		<dependencies>
 			<!-- internal epayment -->
 			<dependency>
-				<groupId>com.lapsa.epayment</groupId>
+				<groupId>tech.lapsa.epayment</groupId>
 				<artifactId>epayment-templates</artifactId>
 				<version>${epayment-templates.version}</version>
 			</dependency>
@@ -81,7 +81,7 @@
 	<dependencies>
 		<!-- internal epayment -->
 		<dependency>
-			<groupId>com.lapsa.epayment</groupId>
+			<groupId>tech.lapsa.epayment</groupId>
 			<artifactId>epayment-templates</artifactId>
 			<scope>compile</scope>
 			<optional>false</optional>
