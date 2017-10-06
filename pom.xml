@@ -18,6 +18,7 @@
 	<properties>
 		<!-- BOMS -->
 		<lapsa-bom.version>1.0-SNAPSHOT</lapsa-bom.version>
+		<epayment-bom.version>1.0-SNAPSHOT</epayment-bom.version>
 		<!-- APIs -->
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
 		<epayment-templates.version>4.0-SNAPSHOT</epayment-templates.version>
@@ -37,11 +38,12 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!-- internal epayment -->
 			<dependency>
 				<groupId>tech.lapsa.epayment</groupId>
-				<artifactId>epayment-templates</artifactId>
-				<version>${epayment-templates.version}</version>
+				<artifactId>epayment-bom</artifactId>
+				<version>${epayment-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 			<!-- internal kkb -->
 			<dependency>
