@@ -16,9 +16,10 @@
 	<name>Epayment Lib : Facade</name>
 
 	<properties>
+		<!-- BOMS -->
+		<lapsa-bom.version>1.0-SNAPSHOT</lapsa-bom.version>
 		<!-- APIs -->
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
-		<lapsa-commons.version>2.2-SNAPSHOT</lapsa-commons.version>
 		<epayment-templates.version>4.0-SNAPSHOT</epayment-templates.version>
 		<!-- EJBs & WARs -->
 		<kkb-dao-impl-jpa.version>3.2-SNAPSHOT</kkb-dao-impl-jpa.version>
@@ -28,6 +29,14 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- BOMS -->
+			<dependency>
+				<groupId>tech.lapsa.lapsa</groupId>
+				<artifactId>lapsa-bom</artifactId>
+				<version>${lapsa-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<!-- internal epayment -->
 			<dependency>
 				<groupId>tech.lapsa.epayment</groupId>
@@ -49,12 +58,6 @@
 				<groupId>com.lapsa.kkb-lib</groupId>
 				<artifactId>kkb-services</artifactId>
 				<version>${kkb-lib.version}</version>
-			</dependency>
-			<!-- internal lapsa-commons -->
-			<dependency>
-				<groupId>tech.lapsa.lapsa</groupId>
-				<artifactId>lapsa-commons</artifactId>
-				<version>${lapsa-commons.version}</version>
 			</dependency>
 			<!-- runtime -->
 			<dependency>
