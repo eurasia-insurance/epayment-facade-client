@@ -20,8 +20,6 @@ import com.lapsa.commons.function.MyStrings;
 import com.lapsa.epayment.facade.Ebill;
 import com.lapsa.epayment.facade.EbillItem;
 import com.lapsa.epayment.facade.EpaymentFacade;
-import com.lapsa.epayment.facade.Payment;
-import com.lapsa.epayment.facade.PaymentBuilder;
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
@@ -200,7 +198,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 			KKBNotificationRequestStage.PAYMENT_LINK, //
 			accepted);
 
-		return new EbillBuilder() //
+		return new EbillBuilderImpl() //
 			.withKKBOrder(order)
 			.build();
 	    }
@@ -209,11 +207,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Override
     public EbillBuilder newEbillBuilder() {
-	return new EbillBuilder();
+	return new EbillBuilderImpl();
     }
 
-    public final class EbillBuilder {
-	private EbillBuilder() {
+    public final class EbillBuilderImpl implements EbillBuilder {
+	private EbillBuilderImpl() {
 	}
 
 	private String id;
@@ -235,6 +233,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	private String requestAppendix;
 	private URI postbackURI;
 
+	@Override
 	public EbillBuilder withFetched(String id) {
 	    try {
 		KKBOrder kkbOrder = orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id"));
@@ -245,6 +244,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	}
 
+	@Override
 	public EbillBuilder withPostbackURI(URI postbackURI) {
 	    this.postbackURI = postbackURI;
 	    return this;
@@ -288,7 +288,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    return this;
 	}
 
-	public EbillImpl build() {
+	@Override
+	public Ebill build() {
 	    if (ebillImpl != null)
 		throw new IllegalStateException("Already built");
 	    switch (status) {

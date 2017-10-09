@@ -14,7 +14,6 @@ import com.lapsa.epayment.facade.QEpaymentSuccess;
 import com.lapsa.epayment.facade.QazkomFacade;
 import com.lapsa.epayment.facade.Response;
 import com.lapsa.epayment.facade.ResponseBuilder;
-import com.lapsa.epayment.facade.beans.EpaymentFacadeBean.EbillImpl;
 import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentRequestDocument;
 import com.lapsa.kkb.core.KKBPaymentResponseDocument;
@@ -48,7 +47,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Inject
     @QEpaymentSuccess
-    private Event<EbillImpl> ebillPaidSuccessfuly;
+    private Event<Ebill> ebillPaidSuccessfuly;
 
     @Override
     public ResponseBuilder newResponseBuilder() {
@@ -151,11 +150,11 @@ public class QazkomFacadeBean implements QazkomFacade {
 			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
 			handled);
 
-		EbillImpl ebillImpl = facade.newEbillBuilder() //
-			.withKKBOrder(order)
+		Ebill ebill = facade.newEbillBuilder() //
+			.withFetched(order.getId())
 			.build();
-		ebillPaidSuccessfuly.fire(ebillImpl);
-		return ebillImpl;
+		ebillPaidSuccessfuly.fire(ebill);
+		return ebill;
 
 	    }
 	}
