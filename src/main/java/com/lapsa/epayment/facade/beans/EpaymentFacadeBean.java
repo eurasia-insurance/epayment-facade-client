@@ -18,6 +18,8 @@ import com.lapsa.commons.function.MyNumbers;
 import com.lapsa.commons.function.MyObjects;
 import com.lapsa.commons.function.MyStrings;
 import com.lapsa.epayment.facade.Ebill;
+import com.lapsa.epayment.facade.Ebill.EbillStatus;
+import com.lapsa.epayment.facade.Ebill.HttpFormTemplate;
 import com.lapsa.epayment.facade.EbillItem;
 import com.lapsa.epayment.facade.EpaymentFacade;
 import com.lapsa.fin.FinCurrency;
@@ -227,7 +229,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	private List<EbillItemImpl> items;
 
-	private EbillImpl ebillImpl;
+	private Ebill ebill;
 	private String requestContent;
 	private String consumerName;
 	private String requestAppendix;
@@ -290,11 +292,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	@Override
 	public Ebill build() {
-	    if (ebillImpl != null)
+	    if (ebill != null)
 		throw new IllegalStateException("Already built");
 	    switch (status) {
 	    case READY:
-		HttpFormTemplate form = new HttpFormTemplate(epayConfig.getEpayURL(), "POST",
+		HttpFormTemplateImpl form = new HttpFormTemplateImpl(epayConfig.getEpayURL(), "POST",
 			MyMaps.of( //
 				"Signed_Order_B64", requestContent, //
 				"template", epayConfig.getTemplateName(), //
@@ -307,18 +309,18 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 				"appendix", requestAppendix, //
 				"BackLink", "%%PAYMENT_PAGE_URL%%" //
 			));
-		ebillImpl = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
+		ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
 			consumerName, items,
 			form);
 		break;
 	    case PAID:
-		ebillImpl = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
+		ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
 			consumerName, items,
 			paid,
 			reference);
 	    default:
 	    }
-	    return ebillImpl;
+	    return ebill;
 	}
 
     }
@@ -345,7 +347,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
 		final Double amount,
 		final LocalizationLanguage consumerLanguage, final String consumerEmail, final String consumerName,
-		List<EbillItemImpl> items, HttpFormTemplate form) {
+		List<EbillItemImpl> items, HttpFormTemplateImpl form) {
 
 	    if (status != EbillStatus.READY)
 		throw new IllegalArgumentException("Invalid status");
@@ -456,30 +458,29 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     }
 
-    public static enum EbillStatus {
-	READY, CANCELED, PAID, FAILED
-    }
-
-    public static class HttpFormTemplate {
+    public static class HttpFormTemplateImpl implements HttpFormTemplate {
 
 	private final URL url;
 	private final String method;
 	private final Map<String, String> params;
 
-	HttpFormTemplate(URL url, String method, Map<String, String> params) {
+	HttpFormTemplateImpl(URL url, String method, Map<String, String> params) {
 	    this.url = MyObjects.requireNonNull(url, "url");
 	    this.method = MyStrings.requireNonEmpty(method, "method");
 	    this.params = Collections.unmodifiableMap(MyMaps.requireNonEmpty(params, "params"));
 	}
 
+	@Override
 	public URL getURL() {
 	    return url;
 	}
 
+	@Override
 	public String getMethod() {
 	    return method;
 	}
 
+	@Override
 	public Map<String, String> getParams() {
 	    return params;
 	}

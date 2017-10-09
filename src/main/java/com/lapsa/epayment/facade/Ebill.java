@@ -1,13 +1,27 @@
 package com.lapsa.epayment.facade;
 
+import java.net.URL;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
-import com.lapsa.epayment.facade.beans.EpaymentFacadeBean.EbillStatus;
-import com.lapsa.epayment.facade.beans.EpaymentFacadeBean.HttpFormTemplate;
 import com.lapsa.international.localization.LocalizationLanguage;
 
 public interface Ebill {
+
+    public static enum EbillStatus {
+	READY, CANCELED, PAID, FAILED
+    }
+
+    public static interface HttpFormTemplate {
+
+	URL getURL();
+
+	String getMethod();
+
+	Map<String, String> getParams();
+
+    }
 
     String getId();
 
