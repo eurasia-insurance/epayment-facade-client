@@ -19,8 +19,6 @@
 		<!-- BOMS -->
 		<javax-javaee-bom.version>7.0-SNAPSHOT</javax-javaee-bom.version>
 		<java-commons-root.version>1.0-SNAPSHOT</java-commons-root.version>
-		<!-- tech -->
-		<epayment-templates.version>4.0-SNAPSHOT</epayment-templates.version>
 		<!-- oldies -->
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
 		<kkb-dao-impl-jpa.version>3.2-SNAPSHOT</kkb-dao-impl-jpa.version>
@@ -44,12 +42,6 @@
 				<version>${java-commons-root.version}</version>
 				<scope>import</scope>
 				<type>pom</type>
-			</dependency>
-			<!-- tech -->
-			<dependency>
-				<groupId>tech.lapsa.epayment</groupId>
-				<artifactId>epayment-templates</artifactId>
-				<version>${epayment-templates.version}</version>
 			</dependency>
 			<!-- oldies -->
 			<dependency>
@@ -94,12 +86,6 @@
 			<groupId>tech.lapsa.java</groupId>
 			<artifactId>java-commons</artifactId>
 			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>tech.lapsa.epayment</groupId>
-			<artifactId>epayment-templates</artifactId>
-			<scope>runtime</scope>
 			<optional>false</optional>
 		</dependency>
 		<!-- oldies -->
