@@ -3,8 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.lapsa.maven.pom</groupId>
-		<artifactId>javaee7-app-parent</artifactId>
+		<groupId>tech.lapsa.maven</groupId>
+		<artifactId>maven-general</artifactId>
 		<version>3.0-SNAPSHOT</version>
 	</parent>
 
@@ -17,11 +17,12 @@
 
 	<properties>
 		<!-- BOMS -->
-		<lapsa-bom.version>1.0-SNAPSHOT</lapsa-bom.version>
-		<epayment-bom.version>1.0-SNAPSHOT</epayment-bom.version>
-		<!-- APIs -->
+		<javax-javaee-bom.version>7.0-SNAPSHOT</javax-javaee-bom.version>
+		<java-commons-root.version>1.0-SNAPSHOT</java-commons-root.version>
+		<!-- tech -->
+		<epayment-templates.version>4.0-SNAPSHOT</epayment-templates.version>
+		<!-- oldies -->
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
-		<!-- EJBs & WARs -->
 		<kkb-dao-impl-jpa.version>3.2-SNAPSHOT</kkb-dao-impl-jpa.version>
 		<kkb-services-impl-default.version>3.1-SNAPSHOT</kkb-services-impl-default.version>
 		<kkb-mesenger-impl-default.version>4.1-SNAPSHOT</kkb-mesenger-impl-default.version>
@@ -31,20 +32,26 @@
 		<dependencies>
 			<!-- BOMS -->
 			<dependency>
-				<groupId>tech.lapsa.lapsa</groupId>
-				<artifactId>lapsa-bom</artifactId>
-				<version>${lapsa-bom.version}</version>
-				<type>pom</type>
+				<groupId>tech.lapsa.javax</groupId>
+				<artifactId>javax-javaee-bom</artifactId>
+				<version>${javax-javaee-bom.version}</version>
 				<scope>import</scope>
+				<type>pom</type>
 			</dependency>
 			<dependency>
-				<groupId>tech.lapsa.epayment</groupId>
-				<artifactId>epayment-bom</artifactId>
-				<version>${epayment-bom.version}</version>
-				<type>pom</type>
+				<groupId>tech.lapsa.java</groupId>
+				<artifactId>java-commons-root</artifactId>
+				<version>${java-commons-root.version}</version>
 				<scope>import</scope>
+				<type>pom</type>
 			</dependency>
-			<!-- internal kkb -->
+			<!-- tech -->
+			<dependency>
+				<groupId>tech.lapsa.epayment</groupId>
+				<artifactId>epayment-templates</artifactId>
+				<version>${epayment-templates.version}</version>
+			</dependency>
+			<!-- oldies -->
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>
 				<artifactId>kkb-dao</artifactId>
@@ -60,7 +67,6 @@
 				<artifactId>kkb-services</artifactId>
 				<version>${kkb-lib.version}</version>
 			</dependency>
-			<!-- runtime -->
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>
 				<artifactId>kkb-mesenger-impl-default</artifactId>
@@ -83,36 +89,38 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- internal epayment -->
+		<!-- tech -->
 		<dependency>
-			<groupId>tech.lapsa.epayment</groupId>
-			<artifactId>epayment-templates</artifactId>
+			<groupId>tech.lapsa.java</groupId>
+			<artifactId>java-commons</artifactId>
 			<scope>compile</scope>
 			<optional>false</optional>
 		</dependency>
-		<!-- internal kkb -->
+		<dependency>
+			<groupId>tech.lapsa.epayment</groupId>
+			<artifactId>epayment-templates</artifactId>
+			<scope>runtime</scope>
+			<optional>false</optional>
+		</dependency>
+		<!-- oldies -->
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-dao</artifactId>
 			<scope>compile</scope>
+			<optional>false</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-mesenger</artifactId>
 			<scope>compile</scope>
+			<optional>false</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-services</artifactId>
 			<scope>compile</scope>
+			<optional>false</optional>
 		</dependency>
-		<!-- internal lapsa-commons -->
-		<dependency>
-			<groupId>tech.lapsa.lapsa</groupId>
-			<artifactId>lapsa-commons</artifactId>
-			<scope>compile</scope>
-		</dependency>
-		<!-- runtime -->
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-mesenger-impl-default</artifactId>
