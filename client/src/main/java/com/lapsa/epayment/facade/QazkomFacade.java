@@ -1,8 +1,8 @@
 package com.lapsa.epayment.facade;
 
-import javax.ejb.Local;
+import javax.ejb.Remote;
 
-@Local
+@Remote
 public interface QazkomFacade {
 
     ResponseBuilder newResponseBuilder();

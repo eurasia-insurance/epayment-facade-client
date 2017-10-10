@@ -2,12 +2,12 @@ package com.lapsa.epayment.facade;
 
 import java.net.URI;
 
-import javax.ejb.Local;
+import javax.ejb.Remote;
 
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 
-@Local
+@Remote
 public interface EpaymentFacade {
 
     PaymentBuilder newPaymentBuilder();
