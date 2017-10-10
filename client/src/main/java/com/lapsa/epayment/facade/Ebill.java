@@ -23,6 +23,16 @@ public interface Ebill {
 
     }
 
+    public static interface EbillItem {
+
+	String getName();
+
+	Double getAmount();
+
+	Integer getQuantity();
+
+    }
+
     String getId();
 
     EbillStatus getStatus();
