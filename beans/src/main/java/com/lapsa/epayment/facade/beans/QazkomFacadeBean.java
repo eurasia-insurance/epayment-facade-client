@@ -185,6 +185,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 	private final String epayMethod = "POST";
 
 	private URI postbackURI;
+	private URI returnUri;
 
 	private String content;
 	private String requestAppendix;
@@ -194,6 +195,12 @@ public class QazkomFacadeBean implements QazkomFacade {
 	@Override
 	public PaymentMethodBuilder withPostbackURI(URI postbackURL) {
 	    this.postbackURI = MyObjects.requireNonNull(postbackURL, "postbackURI");
+	    return this;
+	}
+
+	@Override
+	public PaymentMethodBuilder withReturnURI(URI returnUri) {
+	    this.returnUri = MyObjects.requireNonNull(returnUri, "returnUri");
 	    return this;
 	}
 
@@ -229,7 +236,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 		    "PostLink", MyObjects.requireNonNull(postbackURI, "postbackURI").toString(),
 		    "Language", MyObjects.requireNonNull(consumerLanguage, "consumerLanguage").getTag(), //
 		    "appendix", MyStrings.requireNonEmpty(requestAppendix, "requestAppendix"), //
-		    "BackLink", "%%PAYMENT_PAGE_URL%%" //
+		    "BackLink", MyObjects.requireNonNull(returnUri, "returnUri").toString() //
 	    ));
 	    return new QazkomPaymentMethod(http);
 	}
