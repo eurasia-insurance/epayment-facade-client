@@ -1,20 +1,48 @@
 package com.lapsa.epayment.facade;
 
+import java.net.URI;
+import java.util.Map;
+
 public interface QazkomFacade {
 
-    ResponseBuilder newResponseBuilder();
+    ResponseHandlerBuilder newResponseHandlerBuilder();
 
-    public static interface ResponseBuilder {
+    public static interface ResponseHandlerBuilder {
 
-	ResponseBuilder withXml(String responseXml);
+	ResponseHandlerBuilder withXml(String responseXml);
 
-	Response build();
+	ResponseHandler build();
 
-	public static interface Response {
+	public static interface ResponseHandler {
 
 	    Ebill handle();
 
 	}
 
     }
+
+    PaymentMethodBuilder newPaymentMethodBuilder();
+
+    public static interface PaymentMethodBuilder {
+	PaymentMethodBuilder withPostbackURI(URI postbackURL);
+
+	PaymentMethodBuilder forEbill(Ebill bill);
+
+	PaymentMethod build();
+
+	public static interface PaymentMethod {
+
+	    HttpMethod getHttp();
+
+	    public static interface HttpMethod {
+		URI getHttpAddress();
+
+		String getHttpMethod();
+
+		Map<String, String> getHttpParams();
+	    }
+	}
+
+    }
+
 }

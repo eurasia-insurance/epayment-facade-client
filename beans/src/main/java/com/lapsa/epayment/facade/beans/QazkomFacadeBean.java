@@ -1,19 +1,23 @@
 package com.lapsa.epayment.facade.beans;
 
+import java.net.URI;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
+import com.lapsa.commons.function.MyMaps;
 import com.lapsa.commons.function.MyObjects;
 import com.lapsa.commons.function.MyStrings;
 import com.lapsa.epayment.facade.Ebill;
 import com.lapsa.epayment.facade.EpaymentFacade;
 import com.lapsa.epayment.facade.QEpaymentSuccess;
 import com.lapsa.epayment.facade.QazkomFacade;
-import com.lapsa.epayment.facade.Response;
-import com.lapsa.epayment.facade.ResponseBuilder;
+import com.lapsa.epayment.facade.QazkomFacade.PaymentMethodBuilder.PaymentMethod.HttpMethod;
+import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentRequestDocument;
 import com.lapsa.kkb.core.KKBPaymentResponseDocument;
@@ -24,6 +28,7 @@ import com.lapsa.kkb.mesenger.KKBNotificationChannel;
 import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
 import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
 import com.lapsa.kkb.mesenger.KKBNotifier;
+import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFormatException;
 import com.lapsa.kkb.services.KKBResponseService;
 import com.lapsa.kkb.services.KKBServiceError;
@@ -53,29 +58,29 @@ public class QazkomFacadeBean implements QazkomFacade {
     private Event<Ebill> ebillPaidSuccessfuly;
 
     @Override
-    public ResponseBuilder newResponseBuilder() {
-	return new ResponseBuilderImpl();
+    public ResponseHandlerBuilder newResponseHandlerBuilder() {
+	return new QazkomResponseHandlerBuilder();
     }
 
-    public final class ResponseBuilderImpl implements ResponseBuilder {
+    final class QazkomResponseHandlerBuilder implements ResponseHandlerBuilder {
 
 	private String responseXml;
 
-	private ResponseBuilderImpl() {
+	private QazkomResponseHandlerBuilder() {
 	}
 
 	@Override
-	public ResponseBuilder withXml(String responseXml) {
+	public ResponseHandlerBuilder withXml(String responseXml) {
 	    this.responseXml = responseXml;
 	    return this;
 	}
 
 	@Override
-	public Response build() {
+	public ResponseHandler build() {
 
 	    KKBPaymentResponseDocument response = new KKBPaymentResponseDocument();
 	    response.setCreated(Instant.now());
-	    response.setContent(MyStrings.requireNonEmpty(responseXml, "ResponseImpl is empty"));
+	    response.setContent(MyStrings.requireNonEmpty(responseXml, "QazkomResponseHandler is empty"));
 
 	    // verify format
 	    try {
@@ -113,23 +118,24 @@ public class QazkomFacadeBean implements QazkomFacade {
 		throw new IllegalArgumentException("Responce validation failed", e);
 	    }
 
-	    return new ResponseImpl(response, order);
+	    return new QazkomResponseHandler(response, order);
 	}
 
-	public final class ResponseImpl implements Response {
+	private final class QazkomResponseHandler implements ResponseHandler {
+
+	    private boolean handled = false;
+
 	    private final KKBPaymentResponseDocument response;
 	    private final KKBOrder order;
 
-	    private KKBOrder handled;
-
-	    private ResponseImpl(final KKBPaymentResponseDocument response, final KKBOrder order) {
+	    private QazkomResponseHandler(final KKBPaymentResponseDocument response, final KKBOrder order) {
 		this.order = MyObjects.requireNonNull(order, "order");
 		this.response = MyObjects.requireNonNull(response, "response");
 	    }
 
 	    @Override
 	    public Ebill handle() {
-		if (handled != null)
+		if (handled)
 		    throw new IllegalStateException("Already handled");
 
 		// attach response
@@ -146,20 +152,125 @@ public class QazkomFacadeBean implements QazkomFacade {
 		String paymentReference = responseService.parsePaymentReferences(response, true);
 		order.setPaymentReference(paymentReference);
 
-		handled = orderDAO.save(order);
+		KKBOrder saved = orderDAO.save(order);
 
 		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
 			KKBNotificationRecipientType.REQUESTER, //
 			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
-			handled);
+			saved);
 
-		Ebill ebill = facade.newEbillBuilder() //
-			.withFetched(order.getId())
-			.build();
+		Ebill ebill = facade.newEbillFetcherBuilder() //
+			.usingId(saved.getId()) //
+			.build() //
+			.fetch();
 		ebillPaidSuccessfuly.fire(ebill);
+
+		handled = true;
+
 		return ebill;
 
 	    }
 	}
+    }
+
+    @Override
+    public PaymentMethodBuilder newPaymentMethodBuilder() {
+	return new QazkomPaymentMethodBuilder();
+    }
+
+    final class QazkomPaymentMethodBuilder implements PaymentMethodBuilder {
+
+	private final String template = epayConfig.getTemplateName();
+	private final URI epayAddress = epayConfig.getEpayURI();
+	private final String epayMethod = "POST";
+
+	private URI postbackURI;
+
+	private String content;
+	private String requestAppendix;
+	private String consumerEmail;
+	private LocalizationLanguage consumerLanguage;
+
+	@Override
+	public PaymentMethodBuilder withPostbackURI(URI postbackURL) {
+	    this.postbackURI = MyObjects.requireNonNull(postbackURL, "postbackURI");
+	    return this;
+	}
+
+	@Override
+	public PaymentMethodBuilder forEbill(Ebill ebill) {
+	    // сдесь по идее надо собрать новый документ, подписать его и
+	    // подготовить для HTTP формы
+	    KKBOrder order = null;
+	    try {
+		order = orderDAO.findById(ebill.getId());
+	    } catch (KKBEntityNotFound e) {
+		throw new IllegalArgumentException("Invalid ebill");
+	    }
+	    this.content = order.getLastRequest().getContentBase64();
+	    this.requestAppendix = order.getLastCart().getContentBase64();
+	    this.consumerEmail = order.getConsumerEmail();
+	    this.consumerLanguage = order.getConsumerLanguage();
+	    return this;
+	}
+
+	@Override
+	public PaymentMethod build() {
+	    HttpMethod http = new QazkomHttpMethod(epayAddress, epayMethod, MyMaps.of(
+		    "Signed_Order_B64", MyObjects.requireNonNull(content, "content"), //
+		    "template", MyStrings.requireNonEmpty(template, "template"), //
+		    "email", MyStrings.requireNonEmpty(consumerEmail, "consumerEmail"), //
+		    "PostLink", MyObjects.requireNonNull(postbackURI, "postbackURI").toString(),
+		    "Language", MyObjects.requireNonNull(consumerLanguage, "consumerLanguage").getTag(), //
+		    "appendix", MyStrings.requireNonEmpty(requestAppendix, "requestAppendix"), //
+		    "BackLink", "%%PAYMENT_PAGE_URL%%" //
+	    ));
+	    return new QazkomPaymentMethod(http);
+	}
+
+	final class QazkomHttpMethod implements HttpMethod {
+
+	    final URI httpAddress;
+	    final String httpMethod;
+	    final Map<String, String> httpParams;
+
+	    private QazkomHttpMethod(URI httpAddress, String httpMethod, Map<String, String> httpParams) {
+		this.httpAddress = MyObjects.requireNonNull(httpAddress, "httpAddress");
+		this.httpMethod = MyStrings.requireNonEmpty(httpMethod, "httpMethod");
+		this.httpParams = Collections.unmodifiableMap(MyObjects.requireNonNull(httpParams, "httpParams"));
+	    }
+
+	    @Override
+	    public URI getHttpAddress() {
+		return httpAddress;
+	    }
+
+	    @Override
+	    public String getHttpMethod() {
+		return httpMethod;
+	    }
+
+	    @Override
+	    public Map<String, String> getHttpParams() {
+		return httpParams;
+	    }
+
+	}
+
+	final class QazkomPaymentMethod implements PaymentMethod {
+
+	    final HttpMethod http;
+
+	    private QazkomPaymentMethod(final HttpMethod http) {
+		this.http = MyObjects.requireNonNull(http, "http");
+	    }
+
+	    @Override
+	    public HttpMethod getHttp() {
+		return http;
+	    }
+
+	}
+
     }
 }
