@@ -13,9 +13,11 @@ public interface Ebill {
 
 	String getName();
 
-	Double getAmount();
-
+	Double getPrice();
+	
 	Integer getQuantity();
+
+	Double getTotalAmount();
 
     }
 

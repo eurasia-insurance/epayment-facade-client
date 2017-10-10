@@ -252,7 +252,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		String externalId = order.getExternalId();
 		Instant created = order.getCreated();
 		double amount = order.getAmount();
-		LocalizationLanguage consumerLanguage = order.getConsumerLanguage();
 		String consumerEmail = order.getConsumerEmail();
 		String consumerName = order.getConsumerName();
 
@@ -420,13 +419,19 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     final class EbillItemImpl implements EbillItem {
 
 	final String name;
-	final Double amount;
+	final Double price;
 	final Integer quantity;
+	final Double totalAmount;
 
-	private EbillItemImpl(String name, Double amount, Integer quantity) {
+	private EbillItemImpl(String name, Double price, Integer quantity, Double totalAmount) {
 	    this.name = MyStrings.requireNonEmpty(name, "name");
-	    this.amount = MyNumbers.requireNonZero(amount, "amount");
+	    this.price = MyNumbers.requireNonZero(price, "price");
 	    this.quantity = MyNumbers.requireNonZero(quantity, "quantity");
+	    this.totalAmount = MyNumbers.requireNonZero(totalAmount, "amount");
+	}
+
+	private EbillItemImpl(String name, Double price, Integer quantity) {
+	    this(name, price, quantity, price * quantity);
 	}
 
 	@Override
@@ -435,8 +440,13 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	}
 
 	@Override
-	public Double getAmount() {
-	    return amount;
+	public Double getPrice() {
+	    return price;
+	}
+
+	@Override
+	public Double getTotalAmount() {
+	    return totalAmount;
 	}
 
 	@Override
