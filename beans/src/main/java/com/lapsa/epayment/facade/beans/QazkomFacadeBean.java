@@ -1,4 +1,4 @@
-package com.lapsa.epayment.facade;
+package com.lapsa.epayment.facade.beans;
 
 import java.time.Instant;
 
@@ -9,7 +9,12 @@ import javax.inject.Inject;
 
 import com.lapsa.commons.function.MyObjects;
 import com.lapsa.commons.function.MyStrings;
-import com.lapsa.epayment.facade.EpaymentFacade.Ebill;
+import com.lapsa.epayment.facade.Ebill;
+import com.lapsa.epayment.facade.EpaymentFacade;
+import com.lapsa.epayment.facade.QEpaymentSuccess;
+import com.lapsa.epayment.facade.QazkomFacade;
+import com.lapsa.epayment.facade.Response;
+import com.lapsa.epayment.facade.ResponseBuilder;
 import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentRequestDocument;
 import com.lapsa.kkb.core.KKBPaymentResponseDocument;
@@ -28,7 +33,7 @@ import com.lapsa.kkb.services.KKBWrongSignature;
 
 @Stateless
 @LocalBean
-public class QazkomFacade {
+public class QazkomFacadeBean implements QazkomFacade {
 
     @Inject
     private KKBResponseService responseService;
@@ -46,27 +51,30 @@ public class QazkomFacade {
     @QEpaymentSuccess
     private Event<Ebill> ebillPaidSuccessfuly;
 
+    @Override
     public ResponseBuilder newResponseBuilder() {
-	return new ResponseBuilder();
+	return new ResponseBuilderImpl();
     }
 
-    public final class ResponseBuilder {
+    public final class ResponseBuilderImpl implements ResponseBuilder {
 
 	private String responseXml;
 
-	private ResponseBuilder() {
+	private ResponseBuilderImpl() {
 	}
 
+	@Override
 	public ResponseBuilder withXml(String responseXml) {
 	    this.responseXml = responseXml;
 	    return this;
 	}
 
+	@Override
 	public Response build() {
 
 	    KKBPaymentResponseDocument response = new KKBPaymentResponseDocument();
 	    response.setCreated(Instant.now());
-	    response.setContent(MyStrings.requireNonEmpty(responseXml, "Response is empty"));
+	    response.setContent(MyStrings.requireNonEmpty(responseXml, "ResponseImpl is empty"));
 
 	    // verify format
 	    try {
@@ -104,20 +112,21 @@ public class QazkomFacade {
 		throw new IllegalArgumentException("Responce validation failed", e);
 	    }
 
-	    return new Response(response, order);
+	    return new ResponseImpl(response, order);
 	}
 
-	public final class Response {
+	public final class ResponseImpl implements Response {
 	    private final KKBPaymentResponseDocument response;
 	    private final KKBOrder order;
 
 	    private KKBOrder handled;
 
-	    private Response(final KKBPaymentResponseDocument response, final KKBOrder order) {
+	    private ResponseImpl(final KKBPaymentResponseDocument response, final KKBOrder order) {
 		this.order = MyObjects.requireNonNull(order, "order");
 		this.response = MyObjects.requireNonNull(response, "response");
 	    }
 
+	    @Override
 	    public Ebill handle() {
 		if (handled != null)
 		    throw new IllegalStateException("Already handled");
@@ -144,7 +153,7 @@ public class QazkomFacade {
 			handled);
 
 		Ebill ebill = facade.newEbillBuilder() //
-			.withKKBOrder(order)
+			.withFetched(order.getId())
 			.build();
 		ebillPaidSuccessfuly.fire(ebill);
 		return ebill;

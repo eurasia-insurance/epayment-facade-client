@@ -9,17 +9,24 @@
 	</parent>
 
 	<groupId>tech.lapsa.epayment</groupId>
-	<artifactId>epayment-facade</artifactId>
+	<artifactId>epayment-facade-root</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<packaging>ejb</packaging>
+	<packaging>pom</packaging>
 
 	<name>Epayment Lib : Facade</name>
+
+	<modules>
+		<module>client</module>
+		<module>beans</module>
+	</modules>
 
 	<properties>
 		<!-- BOMS -->
 		<javax-javaee-bom.version>7.0-SNAPSHOT</javax-javaee-bom.version>
 		<java-commons-root.version>1.0-SNAPSHOT</java-commons-root.version>
 		<!-- oldies -->
+		<international-lib.version>3.2-SNAPSHOT</international-lib.version>
+		<fin-lib.version>2.1-SNAPSHOT</fin-lib.version>
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
 		<kkb-dao-impl-jpa.version>3.2-SNAPSHOT</kkb-dao-impl-jpa.version>
 		<kkb-services-impl-default.version>3.1-SNAPSHOT</kkb-services-impl-default.version>
@@ -43,7 +50,34 @@
 				<scope>import</scope>
 				<type>pom</type>
 			</dependency>
+			<!-- own -->
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>epayment-facade-client</artifactId>
+				<version>${project.version}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>epayment-facade</artifactId>
+				<version>${project.version}</version>
+				<type>ejb</type>
+			</dependency>
 			<!-- oldies -->
+			<dependency>
+				<groupId>com.lapsa.international-lib</groupId>
+				<artifactId>parent</artifactId>
+				<version>${international-lib.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.lapsa.fin-lib</groupId>
+				<artifactId>parent</artifactId>
+				<version>${fin-lib.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>
 				<artifactId>kkb-dao</artifactId>
@@ -79,67 +113,6 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
-	<dependencies>
-		<!-- tech -->
-		<dependency>
-			<groupId>tech.lapsa.java</groupId>
-			<artifactId>java-commons</artifactId>
-			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<!-- oldies -->
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-dao</artifactId>
-			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-mesenger</artifactId>
-			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-services</artifactId>
-			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-mesenger-impl-default</artifactId>
-			<type>ejb</type>
-			<scope>runtime</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-dao-impl-jpa</artifactId>
-			<type>ejb</type>
-			<scope>runtime</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-services-impl-default</artifactId>
-			<type>ejb</type>
-			<scope>runtime</scope>
-			<optional>false</optional>
-		</dependency>
-		<!-- JavaEE -->
-		<dependency>
-			<groupId>javax.enterprise</groupId>
-			<artifactId>cdi-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.ejb</groupId>
-			<artifactId>javax.ejb-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
 
 	<scm>
 		<connection>scm:git:https://gitlab.lapsa.tech/lapsa/epayment/facade.git</connection>
