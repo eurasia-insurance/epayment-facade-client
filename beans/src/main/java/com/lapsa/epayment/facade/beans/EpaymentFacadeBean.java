@@ -289,14 +289,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		case READY:
 		case CANCELED:
 		case FAILED:
-		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
-			    consumerName, items);
+		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerEmail, consumerName, items);
 		    break;
 		case PAID:
-		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
-			    consumerName, items,
-			    paid,
-			    reference);
+		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerEmail, consumerName, items,
+			    paid, reference);
 		    break;
 		default:
 		    throw new IllegalStateException("Illegal status of the payment");
@@ -317,7 +314,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	final EbillStatus status;
 	final Instant created;
 	final Double amount;
-	final LocalizationLanguage consumerLanguage;
 	final String consumerEmail;
 	final String consumerName;
 
@@ -328,9 +324,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	// constructor for unpayed ebillImpl
 	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
-		final Double amount,
-		final LocalizationLanguage consumerLanguage, final String consumerEmail, final String consumerName,
-		List<EbillItemImpl> items) {
+		final Double amount, final String consumerEmail, final String consumerName, List<EbillItemImpl> items) {
 
 	    if (status != EbillStatus.READY)
 		throw new IllegalArgumentException("Invalid status");
@@ -340,7 +334,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    this.status = MyObjects.requireNonNull(status, "status");
 	    this.created = MyObjects.requireNonNull(created, "created");
 	    this.amount = MyNumbers.requireNonZero(amount, "amount");
-	    this.consumerLanguage = MyObjects.requireNonNull(consumerLanguage, "userLanguage");
 	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
 	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
 
@@ -352,10 +345,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	// constructor for payed ebillImpl
 	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
-		final Double amount,
-		final LocalizationLanguage userLanguage, final String consumerEmail, final String consumerName,
-		final List<EbillItemImpl> items, final Instant paid,
-		final String reference) {
+		final Double amount, final String consumerEmail, final String consumerName,
+		final List<EbillItemImpl> items, final Instant paid, final String reference) {
 
 	    if (status != EbillStatus.PAID)
 		throw new IllegalArgumentException("Invalid status");
@@ -365,7 +356,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    this.status = MyObjects.requireNonNull(status, "status");
 	    this.created = MyObjects.requireNonNull(created, "created");
 	    this.amount = MyNumbers.requireNonZero(amount, "amount");
-	    this.consumerLanguage = MyObjects.requireNonNull(userLanguage, "userLanguage");
 	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
 	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
 
@@ -393,11 +383,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	@Override
 	public Double getAmount() {
 	    return amount;
-	}
-
-	@Override
-	public LocalizationLanguage getConsumerLanguage() {
-	    return consumerLanguage;
 	}
 
 	@Override

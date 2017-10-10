@@ -3,6 +3,8 @@ package com.lapsa.epayment.facade;
 import java.net.URI;
 import java.util.Map;
 
+import com.lapsa.international.localization.LocalizationLanguage;
+
 public interface QazkomFacade {
 
     ResponseHandlerBuilder newResponseHandlerBuilder();
@@ -25,6 +27,8 @@ public interface QazkomFacade {
 
     public static interface PaymentMethodBuilder {
 	PaymentMethodBuilder withPostbackURI(URI postbackURL);
+
+	PaymentMethodBuilder withConsumerLanguage(LocalizationLanguage language);
 
 	PaymentMethodBuilder forEbill(Ebill bill);
 
