@@ -28,6 +28,8 @@ public interface QazkomFacade {
     public static interface PaymentMethodBuilder {
 	PaymentMethodBuilder withPostbackURI(URI postbackURL);
 
+	PaymentMethodBuilder withReturnURI(URI returnUri);
+
 	PaymentMethodBuilder withConsumerLanguage(LocalizationLanguage language);
 
 	PaymentMethodBuilder forEbill(Ebill bill);
@@ -46,7 +48,6 @@ public interface QazkomFacade {
 		Map<String, String> getHttpParams();
 	    }
 	}
-
     }
 
 }
