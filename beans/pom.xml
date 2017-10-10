@@ -24,7 +24,7 @@
 		<!-- own -->
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>${project.artifactId}-client</artifactId>
+			<artifactId>epayment-facade-client</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
 			<optional>false</optional>

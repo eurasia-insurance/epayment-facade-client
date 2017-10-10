@@ -53,13 +53,13 @@
 			<!-- own -->
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>${project.artifactId}-client</artifactId>
+				<artifactId>epayment-facade-client</artifactId>
 				<version>${project.version}</version>
 				<type>jar</type>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>${project.artifactId}</artifactId>
+				<artifactId>epayment-facade</artifactId>
 				<version>${project.version}</version>
 				<type>ejb</type>
 			</dependency>
