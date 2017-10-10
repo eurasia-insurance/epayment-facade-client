@@ -2,6 +2,7 @@ package com.lapsa.epayment.facade.beans;
 
 import java.time.Instant;
 
+import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -31,6 +32,7 @@ import com.lapsa.kkb.services.KKBValidationErrorException;
 import com.lapsa.kkb.services.KKBWrongSignature;
 
 @Stateless
+@LocalBean
 public class QazkomFacadeBean implements QazkomFacade {
 
     @Inject
