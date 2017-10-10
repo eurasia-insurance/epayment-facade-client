@@ -1,26 +1,21 @@
 package com.lapsa.epayment.facade.beans;
 
-import java.net.URI;
-import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import com.lapsa.commons.function.MyCollections;
-import com.lapsa.commons.function.MyMaps;
 import com.lapsa.commons.function.MyNumbers;
 import com.lapsa.commons.function.MyObjects;
 import com.lapsa.commons.function.MyStrings;
 import com.lapsa.epayment.facade.Ebill;
 import com.lapsa.epayment.facade.Ebill.EbillItem;
 import com.lapsa.epayment.facade.Ebill.EbillStatus;
-import com.lapsa.epayment.facade.Ebill.HttpFormTemplate;
 import com.lapsa.epayment.facade.EpaymentFacade;
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
@@ -33,7 +28,6 @@ import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
 import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
 import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBDocumentComposerService;
-import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFactory;
 
 @Stateless
@@ -52,11 +46,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private KKBNotifier notifier;
 
     @Override
-    public PaymentBuilder newPaymentBuilder() {
-	return new PaymentBuilderImpl();
+    public EbillAcceptorBuilder newEbillAcceptorBuilder() {
+	return new EbillAcceptorBuilderImpl();
     }
 
-    public final class PaymentBuilderImpl implements PaymentBuilder {
+    final class EbillAcceptorBuilderImpl implements EbillAcceptorBuilder {
 	private List<BuilderItem> items = new ArrayList<>();
 	private String orderId;
 	private String email;
@@ -65,41 +59,41 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	private String externalId;
 	private FinCurrency currency;
 
-	private PaymentBuilderImpl() {
+	private EbillAcceptorBuilderImpl() {
 	}
 
 	@Override
-	public PaymentBuilder withMoreItem(String productName, double cost, int quantity) {
+	public EbillAcceptorBuilder withMoreItem(String productName, double cost, int quantity) {
 	    items.add(new BuilderItem(productName, cost, quantity));
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder winthGeneratedId() {
+	public EbillAcceptorBuilder winthGeneratedId() {
 	    this.orderId = factory.generateNewOrderId();
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withOrderCurrencty(FinCurrency currency) {
+	public EbillAcceptorBuilder withOrderCurrencty(FinCurrency currency) {
 	    this.currency = currency;
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withDefaultCurrency() {
+	public EbillAcceptorBuilder withDefaultCurrency() {
 	    this.currency = FinCurrency.KZT;
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withId(String orderId) {
+	public EbillAcceptorBuilder withId(String orderId) {
 	    this.orderId = orderId;
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withConsumer(String email, LocalizationLanguage language, String name) {
+	public EbillAcceptorBuilder withConsumer(String email, LocalizationLanguage language, String name) {
 	    withConsumerLanguage(language);
 	    withConsumerEmail(email);
 	    withConsumerName(name);
@@ -107,43 +101,44 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	}
 
 	@Override
-	public PaymentBuilder withConsumer(String email, LocalizationLanguage language) {
+	public EbillAcceptorBuilder withConsumer(String email, LocalizationLanguage language) {
 	    withConsumerLanguage(language);
 	    withConsumerEmail(email);
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withConsumerName(String name) {
+	public EbillAcceptorBuilder withConsumerName(String name) {
 	    this.name = MyStrings.requireNonEmpty(name, "name");
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withConsumerEmail(String email) {
+	public EbillAcceptorBuilder withConsumerEmail(String email) {
 	    this.email = MyStrings.requireNonEmpty(email, "email");
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withExternalId(String externalId) {
+	public EbillAcceptorBuilder withExternalId(String externalId) {
 	    this.externalId = MyStrings.requireNonEmpty(externalId, "externalId");
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withExternalId(Integer externalId) {
+	public EbillAcceptorBuilder withExternalId(Integer externalId) {
 	    this.externalId = MyNumbers.requireNonZero(externalId, "externalId").toString();
 	    return this;
 	}
 
 	@Override
-	public PaymentBuilder withConsumerLanguage(LocalizationLanguage language) {
+	public EbillAcceptorBuilder withConsumerLanguage(LocalizationLanguage language) {
 	    this.language = MyObjects.requireNonNull(language, "language");
 	    return this;
 	}
 
-	private final class BuilderItem {
+	final class BuilderItem {
+
 	    private final String product;
 	    private final double cost;
 	    private final int quantity;
@@ -156,7 +151,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	}
 
 	@Override
-	public Payment build() {
+	public EbillAcceptor build() {
 	    KKBOrder o = new KKBOrder(MyStrings.requireNonEmpty(orderId, "orderId"));
 	    o.setCreated(Instant.now());
 	    o.setStatus(KKBPaymentStatus.NEW);
@@ -170,181 +165,172 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		    .stream() //
 		    .forEach(x -> factory.generateNewOrderItem(x.product, x.cost, x.quantity, o));
 
-	    return new PaymentImpl(o);
+	    return new EbillAcceptorImpl(o);
 	}
 
-	public final class PaymentImpl implements Payment {
+	final class EbillAcceptorImpl implements EbillAcceptor {
 
-	    private final KKBOrder order;
-	    private KKBOrder accepted;
+	    private boolean accepted = false;
+	    final KKBOrder order;
 
-	    private PaymentImpl(KKBOrder order) {
+	    private EbillAcceptorImpl(KKBOrder order) {
 		this.order = MyObjects.requireNonNull(order, "order");
 	    }
 
 	    @Override
 	    public Ebill accept() {
-		if (accepted != null)
-		    throw new IllegalStateException("Already acceted");
+		if (accepted)
+		    throw new IllegalStateException("Already accepted");
 
 		composer.composeCart(order);
 		composer.composeRequest(order);
 
-		accepted = orderDAO.save(order);
+		KKBOrder saved = orderDAO.save(order);
 
 		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
 			KKBNotificationRecipientType.REQUESTER, //
 			KKBNotificationRequestStage.PAYMENT_LINK, //
-			accepted);
+			saved);
 
-		return new EbillBuilderImpl() //
-			.withKKBOrder(order)
-			.build();
+		accepted = true;
+
+		return new EbillFetcherBuilderImpl() //
+			.withKKBOrder(saved) //
+			.build() //
+			.fetch();
 	    }
 	}
+
     }
 
     @Override
-    public EbillBuilder newEbillBuilder() {
-	return new EbillBuilderImpl();
+    public EbillFetcherBuilder newEbillFetcherBuilder() {
+	return new EbillFetcherBuilderImpl();
     }
 
-    public final class EbillBuilderImpl implements EbillBuilder {
-	private EbillBuilderImpl() {
+    final class EbillFetcherBuilderImpl implements EbillFetcherBuilder {
+
+	private KKBOrder order;
+
+	private EbillFetcherBuilderImpl() {
 	}
 
-	private String id;
-	private String externalId;
-	private EbillStatus status;
-	private Instant created;
-	private Double amount;
-	private LocalizationLanguage consumerLanguage;
-	private String consumerEmail;
-
-	private Instant paid;
-	private String reference;
-
-	private List<EbillItemImpl> items;
-
-	private Ebill ebill;
-	private String requestContent;
-	private String consumerName;
-	private String requestAppendix;
-	private URI postbackURI;
-
 	@Override
-	public EbillBuilder withFetched(String id) {
+	public EbillFetcherBuilder usingId(String id) {
 	    try {
-		KKBOrder kkbOrder = orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id"));
-		return withKKBOrder(kkbOrder);
+		return withKKBOrder(orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id")));
 	    } catch (KKBEntityNotFound e) {
 		throw new IllegalArgumentException("not found", e);
 	    }
-
 	}
 
-	@Override
-	public EbillBuilder withPostbackURI(URI postbackURI) {
-	    this.postbackURI = postbackURI;
-	    return this;
-	}
-
-	EbillBuilder withKKBOrder(KKBOrder kkbOrder) {
-	    this.id = kkbOrder.getId();
-	    this.externalId = kkbOrder.getExternalId();
-	    this.created = kkbOrder.getCreated();
-	    this.amount = kkbOrder.getAmount();
-	    this.consumerLanguage = kkbOrder.getConsumerLanguage();
-	    this.consumerEmail = kkbOrder.getConsumerEmail();
-	    this.consumerName = kkbOrder.getConsumerName();
-
-	    this.items = kkbOrder.getItems().stream() //
-		    .map(x -> new EbillItemImpl(x.getName(), x.getCost(), x.getQuantity()))
-		    .collect(Collectors.toList());
-
-	    this.requestContent = kkbOrder.getLastRequest().getContentBase64();
-	    this.requestAppendix = kkbOrder.getLastCart().getContentBase64();
-	    this.paid = kkbOrder.getPaid();
-	    this.reference = kkbOrder.getPaymentReference();
-
-	    switch (kkbOrder.getStatus()) {
-	    case NEW:
-		this.status = EbillStatus.READY;
-		break;
-	    case AUTHORIZATION_FAILED:
-		this.status = EbillStatus.FAILED;
-		break;
-	    case CANCELED:
-		this.status = EbillStatus.CANCELED;
-		break;
-	    case COMPLETED:
-	    case AUTHORIZATION_PASS:
-	    case ENROLLED:
-		this.status = EbillStatus.PAID;
-		break;
-	    default:
-	    }
+	EbillFetcherBuilder withKKBOrder(KKBOrder order) {
+	    this.order = MyObjects.requireNonNull(order, "order");
 	    return this;
 	}
 
 	@Override
-	public Ebill build() {
-	    if (ebill != null)
-		throw new IllegalStateException("Already built");
-	    switch (status) {
-	    case READY:
-		HttpFormTemplateImpl form = new HttpFormTemplateImpl(epayConfig.getEpayURL(), "POST",
-			MyMaps.of( //
-				"Signed_Order_B64", requestContent, //
-				"template", epayConfig.getTemplateName(), //
-				"email", consumerEmail, //
-				"PostLink", postbackURI.toString(), // TODO move
-								    // QAZKOM WS
-								    // POSTBACK
-								    // to own
-				"Language", "%%LANGUAGE_TAG%%", //
-				"appendix", requestAppendix, //
-				"BackLink", "%%PAYMENT_PAGE_URL%%" //
-			));
-		ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
-			consumerName, items,
-			form);
-		break;
-	    case PAID:
-		ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
-			consumerName, items,
-			paid,
-			reference);
-	    default:
+	public EbillFetcher build() {
+	    return new EbillFetcherImpl(order);
+	}
+
+	final class EbillFetcherImpl implements EbillFetcher {
+
+	    private boolean fetched = false;
+	    final KKBOrder order;
+
+	    private EbillFetcherImpl(KKBOrder order) {
+		this.order = order;
 	    }
-	    return ebill;
+
+	    @Override
+	    public Ebill fetch() {
+		if (fetched)
+		    throw new IllegalStateException("Already accepted");
+
+		String id = order.getId();
+		String externalId = order.getExternalId();
+		Instant created = order.getCreated();
+		double amount = order.getAmount();
+		LocalizationLanguage consumerLanguage = order.getConsumerLanguage();
+		String consumerEmail = order.getConsumerEmail();
+		String consumerName = order.getConsumerName();
+
+		List<EbillItemImpl> items = order.getItems().stream() //
+			.map(x -> new EbillItemImpl(x.getName(), x.getCost(), x.getQuantity()))
+			.collect(Collectors.toList());
+
+		Instant paid = order.getPaid();
+		String reference = order.getPaymentReference();
+
+		EbillStatus status;
+		switch (order.getStatus()) {
+		case NEW:
+		    status = EbillStatus.READY;
+		    break;
+		case AUTHORIZATION_FAILED:
+		    status = EbillStatus.FAILED;
+		    break;
+		case CANCELED:
+		    status = EbillStatus.CANCELED;
+		    break;
+		case COMPLETED:
+		case AUTHORIZATION_PASS:
+		case ENROLLED:
+		    status = EbillStatus.PAID;
+		    break;
+		default:
+		    throw new IllegalStateException("Illegal status of the payment");
+		}
+
+		Ebill ebill = null;
+
+		switch (status) {
+		case READY:
+		case CANCELED:
+		case FAILED:
+		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
+			    consumerName, items);
+		    break;
+		case PAID:
+		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerLanguage, consumerEmail,
+			    consumerName, items,
+			    paid,
+			    reference);
+		    break;
+		default:
+		    throw new IllegalStateException("Illegal status of the payment");
+		}
+
+		fetched = true;
+		return ebill;
+	    }
+
 	}
 
     }
 
-    public final class EbillImpl implements Ebill {
+    final class EbillImpl implements Ebill {
 
-	private final String id;
-	private final String externalId;
-	private final EbillStatus status;
-	private final Instant created;
-	private final Double amount;
-	private final LocalizationLanguage consumerLanguage;
-	private final String consumerEmail;
-	private final String consumerName;
+	final String id;
+	final String externalId;
+	final EbillStatus status;
+	final Instant created;
+	final Double amount;
+	final LocalizationLanguage consumerLanguage;
+	final String consumerEmail;
+	final String consumerName;
 
-	private final List<EbillItemImpl> items;
+	final List<EbillItemImpl> items;
 
-	private final HttpFormTemplate form;
-
-	private final Instant paid;
-	private final String reference;
+	final Instant paid;
+	final String reference;
 
 	// constructor for unpayed ebillImpl
 	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
 		final Double amount,
 		final LocalizationLanguage consumerLanguage, final String consumerEmail, final String consumerName,
-		List<EbillItemImpl> items, HttpFormTemplateImpl form) {
+		List<EbillItemImpl> items) {
 
 	    if (status != EbillStatus.READY)
 		throw new IllegalArgumentException("Invalid status");
@@ -359,8 +345,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
 
 	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
-
-	    this.form = MyObjects.requireNonNull(form, "form");
 
 	    this.paid = null;
 	    this.reference = null;
@@ -386,8 +370,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
 
 	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
-
-	    this.form = null;
 
 	    this.paid = MyObjects.requireNonNull(paid, "paid");
 	    this.reference = MyStrings.requireNonEmpty(reference, "reference");
@@ -424,11 +406,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	}
 
 	@Override
-	public HttpFormTemplate getForm() {
-	    return form;
-	}
-
-	@Override
 	public Instant getPaid() {
 	    return paid;
 	}
@@ -455,39 +432,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     }
 
-    public static class HttpFormTemplateImpl implements HttpFormTemplate {
+    final class EbillItemImpl implements EbillItem {
 
-	private final URL url;
-	private final String method;
-	private final Map<String, String> params;
-
-	HttpFormTemplateImpl(URL url, String method, Map<String, String> params) {
-	    this.url = MyObjects.requireNonNull(url, "url");
-	    this.method = MyStrings.requireNonEmpty(method, "method");
-	    this.params = Collections.unmodifiableMap(MyMaps.requireNonEmpty(params, "params"));
-	}
-
-	@Override
-	public URL getURL() {
-	    return url;
-	}
-
-	@Override
-	public String getMethod() {
-	    return method;
-	}
-
-	@Override
-	public Map<String, String> getParams() {
-	    return params;
-	}
-    }
-
-    public final class EbillItemImpl implements EbillItem {
-
-	private final String name;
-	private final Double amount;
-	private final Integer quantity;
+	final String name;
+	final Double amount;
+	final Integer quantity;
 
 	private EbillItemImpl(String name, Double amount, Integer quantity) {
 	    this.name = MyStrings.requireNonEmpty(name, "name");

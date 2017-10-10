@@ -1,58 +1,60 @@
 package com.lapsa.epayment.facade;
 
-import java.net.URI;
-
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 
 public interface EpaymentFacade {
 
-    PaymentBuilder newPaymentBuilder();
+    EbillAcceptorBuilder newEbillAcceptorBuilder();
 
-    public static interface PaymentBuilder {
+    public static interface EbillAcceptorBuilder {
 
-	PaymentBuilder withMoreItem(String productName, double cost, int quantity);
+	EbillAcceptorBuilder withMoreItem(String productName, double cost, int quantity);
 
-	PaymentBuilder winthGeneratedId();
+	EbillAcceptorBuilder winthGeneratedId();
 
-	PaymentBuilder withOrderCurrencty(FinCurrency currency);
+	EbillAcceptorBuilder withOrderCurrencty(FinCurrency currency);
 
-	PaymentBuilder withDefaultCurrency();
+	EbillAcceptorBuilder withDefaultCurrency();
 
-	PaymentBuilder withId(String orderId);
+	EbillAcceptorBuilder withId(String orderId);
 
-	PaymentBuilder withConsumer(String email, LocalizationLanguage language, String name);
+	EbillAcceptorBuilder withConsumer(String email, LocalizationLanguage language, String name);
 
-	PaymentBuilder withConsumer(String email, LocalizationLanguage language);
+	EbillAcceptorBuilder withConsumer(String email, LocalizationLanguage language);
 
-	PaymentBuilder withConsumerName(String name);
+	EbillAcceptorBuilder withConsumerName(String name);
 
-	PaymentBuilder withConsumerEmail(String email);
+	EbillAcceptorBuilder withConsumerEmail(String email);
 
-	PaymentBuilder withExternalId(String externalId);
+	EbillAcceptorBuilder withExternalId(String externalId);
 
-	PaymentBuilder withExternalId(Integer externalId);
+	EbillAcceptorBuilder withExternalId(Integer externalId);
 
-	PaymentBuilder withConsumerLanguage(LocalizationLanguage language);
+	EbillAcceptorBuilder withConsumerLanguage(LocalizationLanguage language);
 
-	Payment build();
+	EbillAcceptor build();
 
-	public static interface Payment {
+	public static interface EbillAcceptor {
 
 	    Ebill accept();
 
 	}
     }
 
-    EbillBuilder newEbillBuilder();
+    EbillFetcherBuilder newEbillFetcherBuilder();
 
-    public static interface EbillBuilder {
+    public static interface EbillFetcherBuilder {
 
-	EbillBuilder withFetched(String id);
+	EbillFetcherBuilder usingId(String id);
 
-	EbillBuilder withPostbackURI(URI postbackURI);
+	EbillFetcher build();
 
-	Ebill build();
+	public static interface EbillFetcher {
+
+	    Ebill fetch();
+
+	}
 
     }
 
