@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
@@ -19,9 +18,9 @@ import com.lapsa.commons.function.MyNumbers;
 import com.lapsa.commons.function.MyObjects;
 import com.lapsa.commons.function.MyStrings;
 import com.lapsa.epayment.facade.Ebill;
+import com.lapsa.epayment.facade.Ebill.EbillItem;
 import com.lapsa.epayment.facade.Ebill.EbillStatus;
 import com.lapsa.epayment.facade.Ebill.HttpFormTemplate;
-import com.lapsa.epayment.facade.EbillItem;
 import com.lapsa.epayment.facade.EpaymentFacade;
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
@@ -38,14 +37,10 @@ import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFactory;
 
 @Stateless
-@LocalBean
 public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Inject
     private KKBDocumentComposerService composer;
-
-    @Inject
-    private KKBEpayConfigurationService epayConfig;
 
     @Inject
     private KKBFactory factory;
