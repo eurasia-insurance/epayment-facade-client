@@ -2,6 +2,7 @@ package com.lapsa.epayment.facade.beans;
 
 import java.time.Instant;
 
+import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
@@ -35,16 +36,16 @@ import com.lapsa.kkb.services.KKBWrongSignature;
 @LocalBean
 public class QazkomFacadeBean implements QazkomFacade {
 
-    @Inject
+    @EJB
     private KKBResponseService responseService;
 
-    @Inject
+    @EJB
     private KKBOrderDAO orderDAO;
 
-    @Inject
+    @EJB
     private KKBNotifier notifier;
 
-    @Inject
+    @EJB
     private EpaymentFacade facade;
 
     @Inject
