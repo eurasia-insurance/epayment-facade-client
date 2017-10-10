@@ -9,9 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.ejb.EJB;
-import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 
 import com.lapsa.commons.function.MyCollections;
 import com.lapsa.commons.function.MyMaps;
@@ -38,22 +37,18 @@ import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFactory;
 
 @Stateless
-@LocalBean
 public class EpaymentFacadeBean implements EpaymentFacade {
 
-    @EJB
+    @Inject
     private KKBDocumentComposerService composer;
 
-    @EJB
-    private KKBEpayConfigurationService epayConfig;
-
-    @EJB
+    @Inject
     private KKBFactory factory;
 
-    @EJB
+    @Inject
     private KKBOrderDAO orderDAO;
 
-    @EJB
+    @Inject
     private KKBNotifier notifier;
 
     @Override
