@@ -252,7 +252,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		String externalId = order.getExternalId();
 		Instant created = order.getCreated();
 		double amount = order.getAmount();
-		LocalizationLanguage consumerLanguage = order.getConsumerLanguage();
 		String consumerEmail = order.getConsumerEmail();
 		String consumerName = order.getConsumerName();
 
