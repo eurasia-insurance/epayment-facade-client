@@ -3,8 +3,6 @@ package com.lapsa.epayment.facade;
 import java.time.Instant;
 import java.util.List;
 
-import com.lapsa.international.localization.LocalizationLanguage;
-
 public interface Ebill {
 
     public static enum EbillStatus {
@@ -32,8 +30,6 @@ public interface Ebill {
     String getConsumerEmail();
 
     String getConsumerName();
-
-    LocalizationLanguage getConsumerLanguage();
 
     List<? extends EbillItem> getItems();
 

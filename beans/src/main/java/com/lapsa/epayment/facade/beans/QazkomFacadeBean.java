@@ -200,7 +200,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 	@Override
 	public PaymentMethodBuilder forEbill(Ebill ebill) {
 	    // сдесь по идее надо собрать новый документ, подписать его и
-	    // подготовить для HTTP формы
+	    // подготовить для HTTP формы а не загружать из БД
 	    KKBOrder order = null;
 	    try {
 		order = orderDAO.findById(ebill.getId());
@@ -211,6 +211,12 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    this.requestAppendix = order.getLastCart().getContentBase64();
 	    this.consumerEmail = order.getConsumerEmail();
 	    this.consumerLanguage = order.getConsumerLanguage();
+	    return this;
+	}
+
+	@Override
+	public PaymentMethodBuilder withConsumerLanguage(LocalizationLanguage language) {
+	    this.consumerLanguage = MyObjects.requireNonNull(language, "language");
 	    return this;
 	}
 
@@ -271,6 +277,5 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    }
 
 	}
-
     }
 }
