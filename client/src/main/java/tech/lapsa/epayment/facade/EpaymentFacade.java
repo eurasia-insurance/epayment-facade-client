@@ -1,5 +1,7 @@
 package tech.lapsa.epayment.facade;
 
+import java.time.Instant;
+
 import javax.ejb.Local;
 
 import com.lapsa.fin.FinCurrency;
@@ -61,4 +63,26 @@ public interface EpaymentFacade {
 
     }
 
+    EbillPaidMarkerBuilder newEbillPaidMarkerBuilder();
+
+    public static interface EbillPaidMarkerBuilder {
+
+	EbillPaidMarkerBuilder usingId(String id);
+
+	EbillPaidMarkerBuilder withReference(String reference);
+
+	EbillPaidMarkerBuilder withInstant(Instant instant);
+
+	default EbillPaidMarkerBuilder with(Instant instant, String reference) {
+	    return withReference(reference).withInstant(instant);
+	}
+
+	EbillPaidMarker build();
+
+	public static interface EbillPaidMarker {
+
+	    Ebill mark();
+
+	}
+    }
 }

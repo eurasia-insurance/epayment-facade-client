@@ -2,12 +2,19 @@ package tech.lapsa.epayment.facade.beans;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
@@ -23,9 +30,9 @@ import com.lapsa.kkb.services.KKBDocumentComposerService;
 import com.lapsa.kkb.services.KKBFactory;
 
 import tech.lapsa.epayment.facade.Ebill;
-import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.Ebill.EbillItem;
 import tech.lapsa.epayment.facade.Ebill.EbillStatus;
+import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.java.commons.function.MyCollections;
 import tech.lapsa.java.commons.function.MyNumbers;
 import tech.lapsa.java.commons.function.MyObjects;
@@ -138,7 +145,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    return this;
 	}
 
-	final class BuilderItem {
+	private final class BuilderItem {
 
 	    private final String product;
 	    private final double cost;
@@ -241,7 +248,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    final KKBOrder order;
 
 	    private EbillFetcherImpl(KKBOrder order) {
-		this.order = order;
+		this.order = MyObjects.requireNonNull(order, "order");
 	    }
 
 	    @Override
@@ -256,8 +263,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		String consumerEmail = order.getConsumerEmail();
 		String consumerName = order.getConsumerName();
 
-		List<EbillItemImpl> items = order.getItems().stream() //
-			.map(x -> new EbillItemImpl(x.getName(), x.getCost(), x.getQuantity()))
+		List<EbillItem> items = order.getItems().stream() //
+			.map(x -> EbillItem.newItem(x.getName(), x.getCost(), x.getQuantity()))
 			.collect(Collectors.toList());
 
 		Instant paid = order.getPaid();
@@ -289,10 +296,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		case READY:
 		case CANCELED:
 		case FAILED:
-		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerEmail, consumerName, items);
+		    ebill = Ebill.newUnpaid(id, externalId, status, created, amount, consumerEmail, consumerName,
+			    items);
 		    break;
 		case PAID:
-		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerEmail, consumerName, items,
+		    ebill = Ebill.newPaid(id, externalId, status, created, amount, consumerEmail, consumerName, items,
 			    paid, reference);
 		    break;
 		default:
@@ -302,157 +310,112 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		fetched = true;
 		return ebill;
 	    }
-
 	}
-
     }
 
-    final class EbillImpl implements Ebill {
+    private static final String JNDI_JMS_CONNECTION_FACTORY = "epayment/jms/connectionFactory";
 
-	final String id;
-	final String externalId;
-	final EbillStatus status;
-	final Instant created;
-	final Double amount;
-	final String consumerEmail;
-	final String consumerName;
+    @Resource(name = JNDI_JMS_CONNECTION_FACTORY)
+    private ConnectionFactory connectionFactory;
 
-	final List<EbillItemImpl> items;
+    public static final String JNDI_JMS_DEST_PAID_EBILLs = "epayment/jms/paidEbills";
 
-	final Instant paid;
-	final String reference;
+    @Resource(name = JNDI_JMS_DEST_PAID_EBILLs)
+    private Destination paidEbillsDestination;
 
-	// constructor for unpayed ebillImpl
-	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
-		final Double amount, final String consumerEmail, final String consumerName, List<EbillItemImpl> items) {
+    @Override
+    public EbillPaidMarkerBuilder newEbillPaidMarkerBuilder() {
+	return new EbillPaidMarkerBuilderImpl();
+    }
 
-	    if (status != EbillStatus.READY)
-		throw new IllegalArgumentException("Invalid status");
+    final class EbillPaidMarkerBuilderImpl implements EbillPaidMarkerBuilder {
 
-	    this.id = MyStrings.requireNonEmpty(id, "id");
-	    this.externalId = externalId;
-	    this.status = MyObjects.requireNonNull(status, "status");
-	    this.created = MyObjects.requireNonNull(created, "created");
-	    this.amount = MyNumbers.requireNonZero(amount, "amount");
-	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
-	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
+	private KKBOrder order;
+	private String reference;
+	private Instant instant;
 
-	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
-
-	    this.paid = null;
-	    this.reference = null;
+	private EbillPaidMarkerBuilderImpl() {
 	}
 
-	// constructor for payed ebillImpl
-	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
-		final Double amount, final String consumerEmail, final String consumerName,
-		final List<EbillItemImpl> items, final Instant paid, final String reference) {
+	@Override
+	public EbillPaidMarkerBuilder usingId(String id) {
+	    try {
+		return withKKBOrder(orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id")));
+	    } catch (KKBEntityNotFound e) {
+		throw new IllegalArgumentException("not found", e);
+	    }
+	}
 
-	    if (status != EbillStatus.PAID)
-		throw new IllegalArgumentException("Invalid status");
+	EbillPaidMarkerBuilder withKKBOrder(KKBOrder order) {
+	    this.order = MyObjects.requireNonNull(order, "order");
+	    return this;
+	}
 
-	    this.id = MyStrings.requireNonEmpty(id, "id");
-	    this.externalId = externalId;
-	    this.status = MyObjects.requireNonNull(status, "status");
-	    this.created = MyObjects.requireNonNull(created, "created");
-	    this.amount = MyNumbers.requireNonZero(amount, "amount");
-	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
-	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
-
-	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
-
-	    this.paid = MyObjects.requireNonNull(paid, "paid");
+	@Override
+	public EbillPaidMarkerBuilder withReference(String reference) {
 	    this.reference = MyStrings.requireNonEmpty(reference, "reference");
+	    return this;
 	}
 
 	@Override
-	public String getId() {
-	    return id;
+	public EbillPaidMarkerBuilder withInstant(Instant instant) {
+	    this.instant = MyObjects.requireNonNull(instant, "instant");
+	    return this;
 	}
 
 	@Override
-	public EbillStatus getStatus() {
-	    return status;
+	public EbillPaidMarker build() {
+	    return new EbillPaidMarkerImpl(order, reference, instant);
 	}
 
-	@Override
-	public Instant getCreated() {
-	    return created;
-	}
+	final class EbillPaidMarkerImpl implements EbillPaidMarker {
+	    private boolean marked = false;
 
-	@Override
-	public Double getAmount() {
-	    return amount;
-	}
+	    private final KKBOrder order;
+	    private final String reference;
+	    private final Instant instant;
 
-	@Override
-	public List<? extends EbillItem> getItems() {
-	    return items;
-	}
+	    private EbillPaidMarkerImpl(KKBOrder order, String reference, Instant instant) {
+		this.order = MyObjects.requireNonNull(order, "order");
+		this.reference = MyStrings.requireNonEmpty(reference, "reference");
+		this.instant = MyObjects.requireNonNull(instant, "instant");
+	    }
 
-	@Override
-	public Instant getPaid() {
-	    return paid;
-	}
+	    @Override
+	    public Ebill mark() {
+		if (marked)
+		    throw new IllegalStateException("Already marked paid");
 
-	@Override
-	public String getReference() {
-	    return reference;
-	}
+		order.setPaid(instant);
+		order.setPaymentReference(reference);
 
-	@Override
-	public String getConsumerEmail() {
-	    return consumerEmail;
-	}
+		KKBOrder saved = orderDAO.save(order);
 
-	@Override
-	public String getConsumerName() {
-	    return consumerName;
-	}
+		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
+			KKBNotificationRecipientType.REQUESTER, //
+			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
+			saved);
 
-	@Override
-	public String getExternalId() {
-	    return externalId;
+		Ebill ebill = new EbillFetcherBuilderImpl() //
+			.withKKBOrder(saved) //
+			.build() //
+			.fetch();
+
+		try (Connection connection = connectionFactory.createConnection()) {
+		    Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		    MessageProducer producer = session.createProducer(paidEbillsDestination);
+		    Message msg = session.createObjectMessage(ebill);
+		    producer.send(msg);
+		} catch (JMSException e) {
+		    throw new IllegalStateException("Failed to send paid ebill info", e);
+		}
+
+		marked = true;
+
+		return ebill;
+	    }
 	}
 
     }
 
-    final class EbillItemImpl implements EbillItem {
-
-	final String name;
-	final Double price;
-	final Integer quantity;
-	final Double totalAmount;
-
-	private EbillItemImpl(String name, Double price, Integer quantity, Double totalAmount) {
-	    this.name = MyStrings.requireNonEmpty(name, "name");
-	    this.price = MyNumbers.requireNonZero(price, "price");
-	    this.quantity = MyNumbers.requireNonZero(quantity, "quantity");
-	    this.totalAmount = MyNumbers.requireNonZero(totalAmount, "amount");
-	}
-
-	private EbillItemImpl(String name, Double price, Integer quantity) {
-	    this(name, price, quantity, price * quantity);
-	}
-
-	@Override
-	public String getName() {
-	    return name;
-	}
-
-	@Override
-	public Double getPrice() {
-	    return price;
-	}
-
-	@Override
-	public Double getTotalAmount() {
-	    return totalAmount;
-	}
-
-	@Override
-	public Integer getQuantity() {
-	    return quantity;
-	}
-    }
 }
