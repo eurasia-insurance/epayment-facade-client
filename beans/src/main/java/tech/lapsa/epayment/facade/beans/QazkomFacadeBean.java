@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import javax.ejb.Stateless;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 import com.lapsa.international.localization.LocalizationLanguage;
@@ -16,9 +15,6 @@ import com.lapsa.kkb.core.KKBPaymentResponseDocument;
 import com.lapsa.kkb.core.KKBPaymentStatus;
 import com.lapsa.kkb.dao.KKBEntityNotFound;
 import com.lapsa.kkb.dao.KKBOrderDAO;
-import com.lapsa.kkb.mesenger.KKBNotificationChannel;
-import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
-import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
 import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFormatException;
@@ -29,7 +25,6 @@ import com.lapsa.kkb.services.KKBWrongSignature;
 
 import tech.lapsa.epayment.facade.Ebill;
 import tech.lapsa.epayment.facade.EpaymentFacade;
-import tech.lapsa.epayment.facade.QEpaymentSuccess;
 import tech.lapsa.epayment.facade.QazkomFacade;
 import tech.lapsa.epayment.facade.QazkomFacade.PaymentMethodBuilder.PaymentMethod.HttpMethod;
 import tech.lapsa.java.commons.function.MyMaps;
@@ -53,10 +48,6 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Inject
     private EpaymentFacade facade;
-
-    @Inject
-    @QEpaymentSuccess
-    private Event<Ebill> ebillPaidSuccessfuly;
 
     @Override
     public ResponseHandlerBuilder newResponseHandlerBuilder() {
@@ -140,37 +131,29 @@ public class QazkomFacadeBean implements QazkomFacade {
 		    throw new IllegalStateException("Already handled");
 
 		// attach response
-		order.setLastResponse(response);
-
-		// set order status
 		order.setStatus(KKBPaymentStatus.AUTHORIZATION_PASS);
+		order.setLastResponse(response);
+		
+		KKBOrder saved = orderDAO.save(order);
 
 		// paid instant
 		Instant paymentInstant = responseService.parsePaymentTimestamp(response, true);
-		order.setPaid(paymentInstant);
 
 		// paid reference
 		String paymentReference = responseService.parsePaymentReferences(response, true);
-		order.setPaymentReference(paymentReference);
 
-		KKBOrder saved = orderDAO.save(order);
-
-		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
-			KKBNotificationRecipientType.REQUESTER, //
-			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
-			saved);
-
-		Ebill ebill = facade.newEbillFetcherBuilder() //
+		Ebill ebill = facade.newEbillPaidMarkerBuilder() //
 			.usingId(saved.getId()) //
+			.with(paymentInstant, paymentReference) //
 			.build() //
-			.fetch();
-		ebillPaidSuccessfuly.fire(ebill);
+			.mark();
 
 		handled = true;
 
 		return ebill;
 
 	    }
+
 	}
     }
 

@@ -5,8 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
@@ -240,7 +248,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    final KKBOrder order;
 
 	    private EbillFetcherImpl(KKBOrder order) {
-		this.order = order;
+		this.order = MyObjects.requireNonNull(order, "order");
 	    }
 
 	    @Override
@@ -304,4 +312,110 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    }
 	}
     }
+
+    private static final String JNDI_JMS_CONNECTION_FACTORY = "epayment/jms/connectionFactory";
+
+    @Resource(name = JNDI_JMS_CONNECTION_FACTORY)
+    private ConnectionFactory connectionFactory;
+
+    public static final String JNDI_JMS_DEST_PAID_EBILLs = "epayment/jms/paidEbills";
+
+    @Resource(name = JNDI_JMS_DEST_PAID_EBILLs)
+    private Destination paidEbillsDestination;
+
+    @Override
+    public EbillPaidMarkerBuilder newEbillPaidMarkerBuilder() {
+	return new EbillPaidMarkerBuilderImpl();
+    }
+
+    final class EbillPaidMarkerBuilderImpl implements EbillPaidMarkerBuilder {
+
+	private KKBOrder order;
+	private String reference;
+	private Instant instant;
+
+	private EbillPaidMarkerBuilderImpl() {
+	}
+
+	@Override
+	public EbillPaidMarkerBuilder usingId(String id) {
+	    try {
+		return withKKBOrder(orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id")));
+	    } catch (KKBEntityNotFound e) {
+		throw new IllegalArgumentException("not found", e);
+	    }
+	}
+
+	EbillPaidMarkerBuilder withKKBOrder(KKBOrder order) {
+	    this.order = MyObjects.requireNonNull(order, "order");
+	    return this;
+	}
+
+	@Override
+	public EbillPaidMarkerBuilder withReference(String reference) {
+	    this.reference = MyStrings.requireNonEmpty(reference, "reference");
+	    return this;
+	}
+
+	@Override
+	public EbillPaidMarkerBuilder withInstant(Instant instant) {
+	    this.instant = MyObjects.requireNonNull(instant, "instant");
+	    return this;
+	}
+
+	@Override
+	public EbillPaidMarker build() {
+	    return new EbillPaidMarkerImpl(order, reference, instant);
+	}
+
+	final class EbillPaidMarkerImpl implements EbillPaidMarker {
+	    private boolean marked = false;
+
+	    private final KKBOrder order;
+	    private final String reference;
+	    private final Instant instant;
+
+	    private EbillPaidMarkerImpl(KKBOrder order, String reference, Instant instant) {
+		this.order = MyObjects.requireNonNull(order, "order");
+		this.reference = MyStrings.requireNonEmpty(reference, "reference");
+		this.instant = MyObjects.requireNonNull(instant, "instant");
+	    }
+
+	    @Override
+	    public Ebill mark() {
+		if (marked)
+		    throw new IllegalStateException("Already marked paid");
+
+		order.setPaid(instant);
+		order.setPaymentReference(reference);
+
+		KKBOrder saved = orderDAO.save(order);
+
+		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
+			KKBNotificationRecipientType.REQUESTER, //
+			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
+			saved);
+
+		Ebill ebill = new EbillFetcherBuilderImpl() //
+			.withKKBOrder(saved) //
+			.build() //
+			.fetch();
+
+		try (Connection connection = connectionFactory.createConnection()) {
+		    Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		    MessageProducer producer = session.createProducer(paidEbillsDestination);
+		    Message msg = session.createObjectMessage(ebill);
+		    producer.send(msg);
+		} catch (JMSException e) {
+		    throw new IllegalStateException("Failed to send paid ebill info", e);
+		}
+
+		marked = true;
+
+		return ebill;
+	    }
+	}
+
+    }
+
 }
