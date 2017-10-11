@@ -1,8 +1,11 @@
 package tech.lapsa.epayment.facade;
 
+import javax.ejb.Local;
+
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 
+@Local
 public interface EpaymentFacade {
 
     EbillAcceptorBuilder newEbillAcceptorBuilder();
