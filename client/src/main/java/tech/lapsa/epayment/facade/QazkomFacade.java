@@ -1,4 +1,4 @@
-package com.lapsa.epayment.facade;
+package tech.lapsa.epayment.facade;
 
 import java.net.URI;
 import java.util.Map;

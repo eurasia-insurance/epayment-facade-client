@@ -1,4 +1,4 @@
-package com.lapsa.epayment.facade;
+package tech.lapsa.epayment.facade;
 
 import java.time.Instant;
 import java.util.List;

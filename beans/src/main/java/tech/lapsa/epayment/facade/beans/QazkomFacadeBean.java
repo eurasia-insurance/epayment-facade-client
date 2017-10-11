@@ -1,4 +1,4 @@
-package com.lapsa.epayment.facade.beans;
+package tech.lapsa.epayment.facade.beans;
 
 import java.net.URI;
 import java.time.Instant;
@@ -9,11 +9,6 @@ import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
-import com.lapsa.epayment.facade.Ebill;
-import com.lapsa.epayment.facade.EpaymentFacade;
-import com.lapsa.epayment.facade.QEpaymentSuccess;
-import com.lapsa.epayment.facade.QazkomFacade;
-import com.lapsa.epayment.facade.QazkomFacade.PaymentMethodBuilder.PaymentMethod.HttpMethod;
 import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentRequestDocument;
@@ -32,6 +27,11 @@ import com.lapsa.kkb.services.KKBServiceError;
 import com.lapsa.kkb.services.KKBValidationErrorException;
 import com.lapsa.kkb.services.KKBWrongSignature;
 
+import tech.lapsa.epayment.facade.Ebill;
+import tech.lapsa.epayment.facade.EpaymentFacade;
+import tech.lapsa.epayment.facade.QEpaymentSuccess;
+import tech.lapsa.epayment.facade.QazkomFacade;
+import tech.lapsa.epayment.facade.QazkomFacade.PaymentMethodBuilder.PaymentMethod.HttpMethod;
 import tech.lapsa.java.commons.function.MyMaps;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
