@@ -29,13 +29,13 @@
 		</dependency>
 		<!-- JavaEE -->
 		<dependency>
-			<groupId>javax.enterprise</groupId>
-			<artifactId>cdi-api</artifactId>
+			<groupId>javax.ejb</groupId>
+			<artifactId>javax.ejb-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>javax.ejb</groupId>
-			<artifactId>javax.ejb-api</artifactId>
+			<groupId>javax.enterprise</groupId>
+			<artifactId>cdi-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

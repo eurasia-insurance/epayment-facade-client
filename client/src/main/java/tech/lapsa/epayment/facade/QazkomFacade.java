@@ -3,8 +3,11 @@ package tech.lapsa.epayment.facade;
 import java.net.URI;
 import java.util.Map;
 
+import javax.ejb.Local;
+
 import com.lapsa.international.localization.LocalizationLanguage;
 
+@Local
 public interface QazkomFacade {
 
     ResponseHandlerBuilder newResponseHandlerBuilder();
