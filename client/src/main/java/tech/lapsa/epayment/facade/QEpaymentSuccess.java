@@ -1,4 +1,4 @@
-package com.lapsa.epayment.facade;
+package tech.lapsa.epayment.facade;
 
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;

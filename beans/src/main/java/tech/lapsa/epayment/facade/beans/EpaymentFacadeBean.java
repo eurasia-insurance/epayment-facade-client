@@ -1,4 +1,4 @@
-package com.lapsa.epayment.facade.beans;
+package tech.lapsa.epayment.facade.beans;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -9,14 +9,6 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
-import com.lapsa.commons.function.MyCollections;
-import com.lapsa.commons.function.MyNumbers;
-import com.lapsa.commons.function.MyObjects;
-import com.lapsa.commons.function.MyStrings;
-import com.lapsa.epayment.facade.Ebill;
-import com.lapsa.epayment.facade.Ebill.EbillItem;
-import com.lapsa.epayment.facade.Ebill.EbillStatus;
-import com.lapsa.epayment.facade.EpaymentFacade;
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
@@ -29,6 +21,15 @@ import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
 import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBDocumentComposerService;
 import com.lapsa.kkb.services.KKBFactory;
+
+import tech.lapsa.epayment.facade.Ebill;
+import tech.lapsa.epayment.facade.EpaymentFacade;
+import tech.lapsa.epayment.facade.Ebill.EbillItem;
+import tech.lapsa.epayment.facade.Ebill.EbillStatus;
+import tech.lapsa.java.commons.function.MyCollections;
+import tech.lapsa.java.commons.function.MyNumbers;
+import tech.lapsa.java.commons.function.MyObjects;
+import tech.lapsa.java.commons.function.MyStrings;
 
 @Stateless
 public class EpaymentFacadeBean implements EpaymentFacade {

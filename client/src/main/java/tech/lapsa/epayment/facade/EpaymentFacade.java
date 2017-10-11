@@ -1,4 +1,4 @@
-package com.lapsa.epayment.facade;
+package tech.lapsa.epayment.facade;
 
 import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
