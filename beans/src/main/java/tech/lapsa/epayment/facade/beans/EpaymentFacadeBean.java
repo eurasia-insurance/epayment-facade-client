@@ -2,7 +2,6 @@ package tech.lapsa.epayment.facade.beans;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,9 +22,9 @@ import com.lapsa.kkb.services.KKBDocumentComposerService;
 import com.lapsa.kkb.services.KKBFactory;
 
 import tech.lapsa.epayment.facade.Ebill;
-import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.Ebill.EbillItem;
 import tech.lapsa.epayment.facade.Ebill.EbillStatus;
+import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.java.commons.function.MyCollections;
 import tech.lapsa.java.commons.function.MyNumbers;
 import tech.lapsa.java.commons.function.MyObjects;
@@ -138,7 +137,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    return this;
 	}
 
-	final class BuilderItem {
+	private final class BuilderItem {
 
 	    private final String product;
 	    private final double cost;
@@ -256,8 +255,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		String consumerEmail = order.getConsumerEmail();
 		String consumerName = order.getConsumerName();
 
-		List<EbillItemImpl> items = order.getItems().stream() //
-			.map(x -> new EbillItemImpl(x.getName(), x.getCost(), x.getQuantity()))
+		List<EbillItem> items = order.getItems().stream() //
+			.map(x -> EbillItem.newItem(x.getName(), x.getCost(), x.getQuantity()))
 			.collect(Collectors.toList());
 
 		Instant paid = order.getPaid();
@@ -289,10 +288,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		case READY:
 		case CANCELED:
 		case FAILED:
-		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerEmail, consumerName, items);
+		    ebill = Ebill.newUnpaid(id, externalId, status, created, amount, consumerEmail, consumerName,
+			    items);
 		    break;
 		case PAID:
-		    ebill = new EbillImpl(id, externalId, status, created, amount, consumerEmail, consumerName, items,
+		    ebill = Ebill.newPaid(id, externalId, status, created, amount, consumerEmail, consumerName, items,
 			    paid, reference);
 		    break;
 		default:
@@ -302,157 +302,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		fetched = true;
 		return ebill;
 	    }
-
-	}
-
-    }
-
-    final class EbillImpl implements Ebill {
-
-	final String id;
-	final String externalId;
-	final EbillStatus status;
-	final Instant created;
-	final Double amount;
-	final String consumerEmail;
-	final String consumerName;
-
-	final List<EbillItemImpl> items;
-
-	final Instant paid;
-	final String reference;
-
-	// constructor for unpayed ebillImpl
-	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
-		final Double amount, final String consumerEmail, final String consumerName, List<EbillItemImpl> items) {
-
-	    if (status != EbillStatus.READY)
-		throw new IllegalArgumentException("Invalid status");
-
-	    this.id = MyStrings.requireNonEmpty(id, "id");
-	    this.externalId = externalId;
-	    this.status = MyObjects.requireNonNull(status, "status");
-	    this.created = MyObjects.requireNonNull(created, "created");
-	    this.amount = MyNumbers.requireNonZero(amount, "amount");
-	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
-	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
-
-	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
-
-	    this.paid = null;
-	    this.reference = null;
-	}
-
-	// constructor for payed ebillImpl
-	private EbillImpl(final String id, final String externalId, final EbillStatus status, final Instant created,
-		final Double amount, final String consumerEmail, final String consumerName,
-		final List<EbillItemImpl> items, final Instant paid, final String reference) {
-
-	    if (status != EbillStatus.PAID)
-		throw new IllegalArgumentException("Invalid status");
-
-	    this.id = MyStrings.requireNonEmpty(id, "id");
-	    this.externalId = externalId;
-	    this.status = MyObjects.requireNonNull(status, "status");
-	    this.created = MyObjects.requireNonNull(created, "created");
-	    this.amount = MyNumbers.requireNonZero(amount, "amount");
-	    this.consumerEmail = MyStrings.requireNonEmpty(consumerEmail, "consumerEmail");
-	    this.consumerName = MyStrings.requireNonEmpty(consumerName, "consumerName");
-
-	    this.items = Collections.unmodifiableList(MyCollections.requireNonNullElements(items, "items"));
-
-	    this.paid = MyObjects.requireNonNull(paid, "paid");
-	    this.reference = MyStrings.requireNonEmpty(reference, "reference");
-	}
-
-	@Override
-	public String getId() {
-	    return id;
-	}
-
-	@Override
-	public EbillStatus getStatus() {
-	    return status;
-	}
-
-	@Override
-	public Instant getCreated() {
-	    return created;
-	}
-
-	@Override
-	public Double getAmount() {
-	    return amount;
-	}
-
-	@Override
-	public List<? extends EbillItem> getItems() {
-	    return items;
-	}
-
-	@Override
-	public Instant getPaid() {
-	    return paid;
-	}
-
-	@Override
-	public String getReference() {
-	    return reference;
-	}
-
-	@Override
-	public String getConsumerEmail() {
-	    return consumerEmail;
-	}
-
-	@Override
-	public String getConsumerName() {
-	    return consumerName;
-	}
-
-	@Override
-	public String getExternalId() {
-	    return externalId;
-	}
-
-    }
-
-    final class EbillItemImpl implements EbillItem {
-
-	final String name;
-	final Double price;
-	final Integer quantity;
-	final Double totalAmount;
-
-	private EbillItemImpl(String name, Double price, Integer quantity, Double totalAmount) {
-	    this.name = MyStrings.requireNonEmpty(name, "name");
-	    this.price = MyNumbers.requireNonZero(price, "price");
-	    this.quantity = MyNumbers.requireNonZero(quantity, "quantity");
-	    this.totalAmount = MyNumbers.requireNonZero(totalAmount, "amount");
-	}
-
-	private EbillItemImpl(String name, Double price, Integer quantity) {
-	    this(name, price, quantity, price * quantity);
-	}
-
-	@Override
-	public String getName() {
-	    return name;
-	}
-
-	@Override
-	public Double getPrice() {
-	    return price;
-	}
-
-	@Override
-	public Double getTotalAmount() {
-	    return totalAmount;
-	}
-
-	@Override
-	public Integer getQuantity() {
-	    return quantity;
 	}
     }
 }
