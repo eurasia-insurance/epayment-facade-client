@@ -66,32 +66,24 @@
 			<!-- oldies -->
 			<dependency>
 				<groupId>com.lapsa.international-lib</groupId>
-				<artifactId>parent</artifactId>
+				<artifactId>international-root</artifactId>
 				<version>${international-lib.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.lapsa.fin-lib</groupId>
-				<artifactId>parent</artifactId>
+				<artifactId>fin-root</artifactId>
 				<version>${fin-lib.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>
-				<artifactId>kkb-dao</artifactId>
+				<artifactId>kkb-root</artifactId>
 				<version>${kkb-lib.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.lapsa.kkb-lib</groupId>
-				<artifactId>kkb-mesenger</artifactId>
-				<version>${kkb-lib.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.lapsa.kkb-lib</groupId>
-				<artifactId>kkb-services</artifactId>
-				<version>${kkb-lib.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>
