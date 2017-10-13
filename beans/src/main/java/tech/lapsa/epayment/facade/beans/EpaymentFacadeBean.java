@@ -1,5 +1,6 @@
 package tech.lapsa.epayment.facade.beans;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +53,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Inject
     private KKBNotifier notifier;
+
+    @Override
+    public URI getDefaultPaymentURI(Ebill ebill) {
+	return factory.generateDefaultPaymentURI(ebill.getId());
+    }
 
     @Override
     public EbillAcceptorBuilder newEbillAcceptorBuilder() {
@@ -415,7 +421,5 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		return ebill;
 	    }
 	}
-
     }
-
 }
