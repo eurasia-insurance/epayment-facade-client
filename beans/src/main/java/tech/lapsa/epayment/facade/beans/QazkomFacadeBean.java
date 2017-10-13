@@ -63,7 +63,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 	@Override
 	public ResponseHandlerBuilder withXml(String responseXml) {
-	    this.responseXml = responseXml;
+	    this.responseXml = MyStrings.requireNonEmpty(responseXml, "responseXml");
 	    return this;
 	}
 
@@ -72,7 +72,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 	    KKBPaymentResponseDocument response = new KKBPaymentResponseDocument();
 	    response.setCreated(Instant.now());
-	    response.setContent(MyStrings.requireNonEmpty(responseXml, "QazkomResponseHandler is empty"));
+	    response.setContent(MyStrings.requireNonEmpty(responseXml, "responseXml"));
 
 	    // verify format
 	    try {
