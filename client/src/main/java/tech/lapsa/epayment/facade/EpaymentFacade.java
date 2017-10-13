@@ -1,5 +1,6 @@
 package tech.lapsa.epayment.facade;
 
+import java.net.URI;
 import java.time.Instant;
 
 import javax.ejb.Local;
@@ -9,6 +10,8 @@ import com.lapsa.international.localization.LocalizationLanguage;
 
 @Local
 public interface EpaymentFacade {
+
+    URI getDefaultPaymentURI(Ebill ebill);
 
     EbillAcceptorBuilder newEbillAcceptorBuilder();
 
