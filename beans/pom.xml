@@ -29,13 +29,21 @@
 			<scope>compile</scope>
 			<optional>false</optional>
 		</dependency>
-		<!-- oldies -->
+		<!-- tech -->
 		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-dao</artifactId>
+			<groupId>tech.lapsa.epayment</groupId>
+			<artifactId>epayment-dao-client</artifactId>
 			<scope>compile</scope>
 			<optional>false</optional>
 		</dependency>
+		<dependency>
+			<groupId>tech.lapsa.epayment</groupId>
+			<artifactId>epayment-dao</artifactId>
+			<type>ejb</type>
+			<scope>runtime</scope>
+			<optional>false</optional>
+		</dependency>
+		<!-- oldies -->
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-mesenger</artifactId>
@@ -51,13 +59,6 @@
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-mesenger-impl-default</artifactId>
-			<type>ejb</type>
-			<scope>runtime</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-dao-impl-jpa</artifactId>
 			<type>ejb</type>
 			<scope>runtime</scope>
 			<optional>false</optional>

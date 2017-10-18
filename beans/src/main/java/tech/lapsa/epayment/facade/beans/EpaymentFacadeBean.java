@@ -21,7 +21,6 @@ import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentStatus;
-import com.lapsa.kkb.dao.KKBEntityNotFound;
 import com.lapsa.kkb.dao.KKBOrderDAO;
 import com.lapsa.kkb.mesenger.KKBNotificationChannel;
 import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
@@ -231,11 +230,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	@Override
 	public EbillFetcherBuilder usingId(String id) {
-	    try {
-		return withKKBOrder(orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id")));
-	    } catch (KKBEntityNotFound e) {
-		throw new IllegalArgumentException("not found", e);
-	    }
+	    return withKKBOrder(orderDAO.optionalByIdByPassCache(MyStrings.requireNonEmpty(id, "id")) //
+		    .orElseThrow(() -> new IllegalArgumentException("not found")));
 	}
 
 	EbillFetcherBuilder withKKBOrder(KKBOrder order) {
@@ -345,11 +341,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	@Override
 	public EbillPaidMarkerBuilder usingId(String id) {
-	    try {
-		return withKKBOrder(orderDAO.findByIdByPassCache(MyStrings.requireNonEmpty(id, "id")));
-	    } catch (KKBEntityNotFound e) {
-		throw new IllegalArgumentException("not found", e);
-	    }
+	    return withKKBOrder(orderDAO.optionalByIdByPassCache(MyStrings.requireNonEmpty(id, "id")) //
+		    .orElseThrow(() -> new IllegalArgumentException("not found")));
 	}
 
 	EbillPaidMarkerBuilder withKKBOrder(KKBOrder order) {

@@ -13,7 +13,6 @@ import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentRequestDocument;
 import com.lapsa.kkb.core.KKBPaymentResponseDocument;
 import com.lapsa.kkb.core.KKBPaymentStatus;
-import com.lapsa.kkb.dao.KKBEntityNotFound;
 import com.lapsa.kkb.dao.KKBOrderDAO;
 import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBEpayConfigurationService;
@@ -91,13 +90,9 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    }
 
 	    // find order by id
-	    KKBOrder order = null;
-	    try {
-		String orderId = responseService.parseOrderId(response, true);
-		order = orderDAO.findByIdByPassCache(orderId);
-	    } catch (KKBEntityNotFound e) {
-		throw new IllegalArgumentException("No payment order found or reference is invlaid", e);
-	    }
+	    String orderId = responseService.parseOrderId(response, true);
+	    KKBOrder order = orderDAO.optionalByIdByPassCache(orderId)
+		    .orElseThrow(() -> new IllegalArgumentException("No payment order found or reference is invlaid"));
 
 	    // validate response to request
 	    KKBPaymentRequestDocument request = order.getLastRequest();
@@ -133,7 +128,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 		// attach response
 		order.setStatus(KKBPaymentStatus.AUTHORIZATION_PASS);
 		order.setLastResponse(response);
-		
+
 		KKBOrder saved = orderDAO.save(order);
 
 		// paid instant
@@ -192,12 +187,8 @@ public class QazkomFacadeBean implements QazkomFacade {
 	public PaymentMethodBuilder forEbill(Ebill ebill) {
 	    // сдесь по идее надо собрать новый документ, подписать его и
 	    // подготовить для HTTP формы а не загружать из БД
-	    KKBOrder order = null;
-	    try {
-		order = orderDAO.findById(ebill.getId());
-	    } catch (KKBEntityNotFound e) {
-		throw new IllegalArgumentException("Invalid ebill");
-	    }
+	    KKBOrder order = orderDAO.optionalById(ebill.getId())
+		    .orElseThrow(() -> new IllegalArgumentException("Invalid ebill"));
 	    this.content = order.getLastRequest().getContentBase64();
 	    this.requestAppendix = order.getLastCart().getContentBase64();
 	    this.consumerEmail = order.getConsumerEmail();
