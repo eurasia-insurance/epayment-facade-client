@@ -21,7 +21,6 @@ import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentStatus;
-import com.lapsa.kkb.dao.KKBOrderDAO;
 import com.lapsa.kkb.mesenger.KKBNotificationChannel;
 import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
 import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
@@ -29,6 +28,7 @@ import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBDocumentComposerService;
 import com.lapsa.kkb.services.KKBFactory;
 
+import tech.lapsa.epayment.dao.KKBOrderDAO;
 import tech.lapsa.epayment.facade.Ebill;
 import tech.lapsa.epayment.facade.Ebill.EbillItem;
 import tech.lapsa.epayment.facade.Ebill.EbillStatus;

@@ -13,7 +13,6 @@ import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentRequestDocument;
 import com.lapsa.kkb.core.KKBPaymentResponseDocument;
 import com.lapsa.kkb.core.KKBPaymentStatus;
-import com.lapsa.kkb.dao.KKBOrderDAO;
 import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFormatException;
@@ -22,6 +21,7 @@ import com.lapsa.kkb.services.KKBServiceError;
 import com.lapsa.kkb.services.KKBValidationErrorException;
 import com.lapsa.kkb.services.KKBWrongSignature;
 
+import tech.lapsa.epayment.dao.KKBOrderDAO;
 import tech.lapsa.epayment.facade.Ebill;
 import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.QazkomFacade;
