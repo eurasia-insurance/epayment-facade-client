@@ -200,10 +200,13 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 		KKBOrder saved = orderDAO.save(order);
 
-		notifier.assignOrderNotification(NotificationChannel.EMAIL, //
-			NotificationRecipientType.REQUESTER, //
-			NotificationRequestStage.PAYMENT_LINK, //
-			saved);
+		notifier.newNotificationBuilder() //
+			.withChannel(NotificationChannel.EMAIL) //
+			.withEvent(NotificationRequestStage.PAYMENT_LINK) //
+			.withRecipient(NotificationRecipientType.REQUESTER) //
+			.forEpayment(saved) //
+			.build() //
+			.send();
 
 		accepted = true;
 
