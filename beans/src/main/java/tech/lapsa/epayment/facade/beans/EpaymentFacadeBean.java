@@ -204,7 +204,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 			.withChannel(NotificationChannel.EMAIL) //
 			.withEvent(NotificationRequestStage.PAYMENT_LINK) //
 			.withRecipient(NotificationRecipientType.REQUESTER) //
-			.forEpayment(saved) //
+			.forEntity(saved) //
 			.build() //
 			.send();
 
