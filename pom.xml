@@ -26,12 +26,12 @@
 		<java-commons-root.version>1.0-SNAPSHOT</java-commons-root.version>
 		<!-- tech -->
 		<epayment-dao.version>1.0-SNAPSHOT</epayment-dao.version>
+		<epayment-notifier.version>1.0-SNAPSHOT</epayment-notifier.version>
 		<!-- oldies -->
 		<international-lib.version>3.2-SNAPSHOT</international-lib.version>
 		<fin-lib.version>2.1-SNAPSHOT</fin-lib.version>
 		<kkb-lib.version>3.2-SNAPSHOT</kkb-lib.version>
 		<kkb-services-impl-default.version>3.1-SNAPSHOT</kkb-services-impl-default.version>
-		<kkb-mesenger-impl-default.version>4.1-SNAPSHOT</kkb-mesenger-impl-default.version>
 	</properties>
 
 	<dependencyManagement>
@@ -55,6 +55,13 @@
 				<groupId>tech.lapsa.epayment</groupId>
 				<artifactId>epayment-dao-root</artifactId>
 				<version>${epayment-dao.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>tech.lapsa.epayment</groupId>
+				<artifactId>epayment-notifier-root</artifactId>
+				<version>${epayment-notifier.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -92,12 +99,6 @@
 				<version>${kkb-lib.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.lapsa.kkb-lib</groupId>
-				<artifactId>kkb-mesenger-impl-default</artifactId>
-				<version>${kkb-mesenger-impl-default.version}</version>
-				<type>ejb</type>
 			</dependency>
 			<dependency>
 				<groupId>com.lapsa.kkb-lib</groupId>

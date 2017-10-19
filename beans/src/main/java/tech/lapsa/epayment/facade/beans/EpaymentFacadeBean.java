@@ -21,10 +21,6 @@ import com.lapsa.fin.FinCurrency;
 import com.lapsa.international.localization.LocalizationLanguage;
 import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentStatus;
-import com.lapsa.kkb.mesenger.KKBNotificationChannel;
-import com.lapsa.kkb.mesenger.KKBNotificationRecipientType;
-import com.lapsa.kkb.mesenger.KKBNotificationRequestStage;
-import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBDocumentComposerService;
 import com.lapsa.kkb.services.KKBFactory;
 
@@ -33,6 +29,10 @@ import tech.lapsa.epayment.facade.Ebill;
 import tech.lapsa.epayment.facade.Ebill.EbillItem;
 import tech.lapsa.epayment.facade.Ebill.EbillStatus;
 import tech.lapsa.epayment.facade.EpaymentFacade;
+import tech.lapsa.epayment.notifier.NotificationChannel;
+import tech.lapsa.epayment.notifier.NotificationRecipientType;
+import tech.lapsa.epayment.notifier.NotificationRequestStage;
+import tech.lapsa.epayment.notifier.Notifier;
 import tech.lapsa.java.commons.function.MyCollections;
 import tech.lapsa.java.commons.function.MyNumbers;
 import tech.lapsa.java.commons.function.MyObjects;
@@ -51,7 +51,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private KKBOrderDAO orderDAO;
 
     @Inject
-    private KKBNotifier notifier;
+    private Notifier notifier;
 
     @Override
     public URI getDefaultPaymentURI(Ebill ebill) {
@@ -200,9 +200,9 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 		KKBOrder saved = orderDAO.save(order);
 
-		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
-			KKBNotificationRecipientType.REQUESTER, //
-			KKBNotificationRequestStage.PAYMENT_LINK, //
+		notifier.assignOrderNotification(NotificationChannel.EMAIL, //
+			NotificationRecipientType.REQUESTER, //
+			NotificationRequestStage.PAYMENT_LINK, //
 			saved);
 
 		accepted = true;
@@ -390,9 +390,9 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 		KKBOrder saved = orderDAO.save(order);
 
-		notifier.assignOrderNotification(KKBNotificationChannel.EMAIL, //
-			KKBNotificationRecipientType.REQUESTER, //
-			KKBNotificationRequestStage.PAYMENT_SUCCESS, //
+		notifier.assignOrderNotification(NotificationChannel.EMAIL, //
+			NotificationRecipientType.REQUESTER, //
+			NotificationRequestStage.PAYMENT_SUCCESS, //
 			saved);
 
 		Ebill ebill = new EbillFetcherBuilderImpl() //

@@ -13,7 +13,6 @@ import com.lapsa.kkb.core.KKBOrder;
 import com.lapsa.kkb.core.KKBPaymentRequestDocument;
 import com.lapsa.kkb.core.KKBPaymentResponseDocument;
 import com.lapsa.kkb.core.KKBPaymentStatus;
-import com.lapsa.kkb.mesenger.KKBNotifier;
 import com.lapsa.kkb.services.KKBEpayConfigurationService;
 import com.lapsa.kkb.services.KKBFormatException;
 import com.lapsa.kkb.services.KKBResponseService;
@@ -41,9 +40,6 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Inject
     private KKBOrderDAO orderDAO;
-
-    @Inject
-    private KKBNotifier notifier;
 
     @Inject
     private EpaymentFacade facade;

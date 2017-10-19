@@ -43,24 +43,24 @@
 			<scope>runtime</scope>
 			<optional>false</optional>
 		</dependency>
-		<!-- oldies -->
 		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-mesenger</artifactId>
+			<groupId>tech.lapsa.epayment</groupId>
+			<artifactId>epayment-notifier-client</artifactId>
 			<scope>compile</scope>
 			<optional>false</optional>
 		</dependency>
+		<dependency>
+			<groupId>tech.lapsa.epayment</groupId>
+			<artifactId>epayment-notifier</artifactId>
+			<type>ejb</type>
+			<scope>runtime</scope>
+			<optional>false</optional>
+		</dependency>
+		<!-- oldies -->
 		<dependency>
 			<groupId>com.lapsa.kkb-lib</groupId>
 			<artifactId>kkb-services</artifactId>
 			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.lapsa.kkb-lib</groupId>
-			<artifactId>kkb-mesenger-impl-default</artifactId>
-			<type>ejb</type>
-			<scope>runtime</scope>
 			<optional>false</optional>
 		</dependency>
 		<dependency>
