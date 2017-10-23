@@ -4,8 +4,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -30,11 +28,15 @@ import tech.lapsa.epayment.facade.QazkomFacade.PaymentMethodBuilder.PaymentMetho
 import tech.lapsa.java.commons.function.MyMaps;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
+import tech.lapsa.java.commons.logging.MyLogger;
 
 @Stateless
 public class QazkomFacadeBean implements QazkomFacade {
 
-    private final Logger logger = Logger.getLogger(QazkomFacade.class.getPackage().getName());
+    private final MyLogger logger = MyLogger.newBuilder() //
+	    .withPackageNameOf(QazkomFacade.class) //
+	    .withPrefix("QAZKOM") //
+	    .build();
 
     @Inject
     private KKBEpayConfigurationService epayConfig;
@@ -69,10 +71,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 	@Override
 	public ResponseHandler build() {
 
-	    logger.fine("Start building ResponseHandler");
-
-	    logger.fine("Response receiuved");
-	    logger.fine(String.format("responseXml='$1$s'", responseXml));
+	    logger.FINE.log("RESPONSE RECEIVED '%1$s'", responseXml);
 
 	    KKBPaymentResponseDocument response = new KKBPaymentResponseDocument();
 	    response.setCreated(Instant.now());
@@ -81,20 +80,20 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    // verify format
 	    try {
 		responseService.validateResponseXmlFormat(response);
-		logger.fine(String.format("XML format valid"));
+		logger.FINE.log("XML FORMAT IS VALID");
 	    } catch (KKBFormatException e) {
-		logger.log(Level.WARNING, String.format("Wrong xml format"));
+		logger.WARNING.log("WRONG XML FORMAT");
 		throw new IllegalArgumentException("Wrong xml format", e);
 	    }
 
 	    // validate signature
 	    try {
 		responseService.validateSignatureNoFormatCheck(response);
-		logger.fine(String.format("Signature valid"));
+		logger.FINE.log("SIGNATURE IS VALID");
 	    } catch (KKBServiceError e) {
 		throw new RuntimeException("Internal error", e);
 	    } catch (KKBWrongSignature e) {
-		logger.log(Level.WARNING, String.format("Wrong signature"));
+		logger.WARNING.log("WRONG SIGNATURE");
 		throw new IllegalArgumentException("Wrong signature", e);
 	    }
 
@@ -102,24 +101,24 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    String orderId = responseService.parseOrderIdNoFormatCheck(response);
 	    KKBOrder order = orderDAO.optionalByIdByPassCache(orderId)
 		    .orElseThrow(() -> new IllegalArgumentException("No payment order found or reference is invlaid"));
-	    logger.fine(String.format("Order found with id='%1$s'", orderId));
+	    logger.FINE.log("INVOICE FOUND WITH ID '%1$s'", orderId);
 
 	    // validate response to request
 	    KKBPaymentRequestDocument request = order.getLastRequest();
 	    if (request == null) {
-		logger.log(Level.WARNING, String.format("No last request"));
+		logger.WARNING.log("LAST REQUEST IS NOT FOUND");
 		throw new RuntimeException("There is no request for response found"); // fatal
 	    }
 
 	    try {
 		responseService.validateResponseWithRequestNoFormatCheck(request, response);
-		logger.fine(String.format("Validated successfuly response with request"));
+		logger.FINE.log("RESPONSE-WITH-REQUEST VALIDATION SUCCESSFUL");
 	    } catch (KKBValidationErrorException e) {
-		logger.log(Level.WARNING, String.format("Validation failed"));
+		logger.WARNING.log("RESPONSE-WITH-REQUEST VALIDATION FAILED");
 		throw new IllegalArgumentException("Responce validation failed", e);
 	    }
 
-	    logger.fine("ResponseHandler built succesfuly");
+	    logger.FINE.log("ResponseHandler BUILD SUCCESSFUL");
 	    return new QazkomResponseHandler(response, order);
 	}
 
@@ -140,15 +139,14 @@ public class QazkomFacadeBean implements QazkomFacade {
 		if (handled)
 		    throw new IllegalStateException("Already handled");
 
-		logger.fine("Start handling");
+		logger.FINE.log("Start handling");
 
 		// attach response
 		order.setStatus(KKBPaymentStatus.AUTHORIZATION_PASS);
 		order.setLastResponse(response);
 
 		KKBOrder saved = orderDAO.save(order);
-		logger.fine(String.format("Saved as the last response with document id = '%1$s'",
-			order.getLastResponse().getId()));
+		logger.FINE.log("LAST RESPONSE SAVED");
 
 		// paid instant
 		Instant paymentInstant = responseService.parsePaymentTimestampNoFormatCheck(response);
@@ -164,7 +162,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		handled = true;
 
-		logger.fine("Handled succesfuly");
+		logger.FINE.log("HANDLED SUCCESSFULY");
 
 		return ebill;
 
