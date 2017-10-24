@@ -34,7 +34,7 @@ import tech.lapsa.java.commons.logging.MyLogger;
 public class QazkomFacadeBean implements QazkomFacade {
 
     private final MyLogger logger = MyLogger.newBuilder() //
-	    .withPackageNameOf(QazkomFacade.class) //
+	    .withNameOf(QazkomFacade.class) //
 	    .addWithPrefix("QAZKOM") //
 	    .addWithCAPS() //
 	    .build();
