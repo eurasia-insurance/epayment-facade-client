@@ -163,7 +163,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		handled = true;
 
-		logger.FINE.log("HANDLED SUCCESSFULY");
+		logger.FINE.log("HANDLED SUCCESSFULY invoice id = '%1$s'", ebill.getId());
 
 		return ebill;
 
