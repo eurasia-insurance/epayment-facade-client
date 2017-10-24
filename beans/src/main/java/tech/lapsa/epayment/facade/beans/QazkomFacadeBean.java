@@ -35,7 +35,8 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     private final MyLogger logger = MyLogger.newBuilder() //
 	    .withPackageNameOf(QazkomFacade.class) //
-	    .withPrefix("QAZKOM") //
+	    .addWithPrefix("QAZKOM") //
+	    .addWithCAPS() //
 	    .build();
 
     @Inject
