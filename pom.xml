@@ -24,13 +24,13 @@
 		<javax-javaee-bom.version>7.0</javax-javaee-bom.version>
 		<java-commons.version>1.0</java-commons.version>
 		<!-- tech -->
-		<epayment-dao.version>1.0</epayment-dao.version>
-		<epayment-notifier.version>1.0</epayment-notifier.version>
+		<epayment-dao.version>1.1-SNAPSHOT</epayment-dao.version>
+		<epayment-notifier.version>1.1-SNAPSHOT</epayment-notifier.version>
 		<!-- oldies -->
-		<international-lib.version>3.2</international-lib.version>
+		<international-lib.version>3.3-SNAPSHOT</international-lib.version>
 		<fin-lib.version>2.1</fin-lib.version>
-		<kkb-lib.version>3.2</kkb-lib.version>
-		<kkb-services-impl-default.version>3.1</kkb-services-impl-default.version>
+		<kkb-lib.version>3.3-SNAPSHOT</kkb-lib.version>
+		<kkb-services-impl-default.version>3.2-SNAPSHOT</kkb-services-impl-default.version>
 	</properties>
 
 	<dependencyManagement>
