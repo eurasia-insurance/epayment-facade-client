@@ -1,91 +1,23 @@
 package tech.lapsa.epayment.facade;
 
 import java.net.URI;
-import java.time.Instant;
 
 import javax.ejb.Local;
 
-import com.lapsa.fin.FinCurrency;
-import com.lapsa.international.localization.LocalizationLanguage;
+import tech.lapsa.epayment.domain.Invoice;
+import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 
 @Local
 public interface EpaymentFacade {
 
-    URI getDefaultPaymentURI(Ebill ebill);
+    URI getDefaultPaymentURI(Invoice invoice) throws IllegalArgumentException;
 
-    EbillAcceptorBuilder newEbillAcceptorBuilder();
+    Invoice accept(Invoice invoice) throws IllegalArgumentException;
 
-    public static interface EbillAcceptorBuilder {
+    Invoice completeAndAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgumentException;
 
-	EbillAcceptorBuilder withMoreItem(String productName, double cost, int quantity);
+    Invoice forNumber(String number) throws IllegalArgumentException;
 
-	EbillAcceptorBuilder winthGeneratedId();
+    void markPaid(Invoice invoice) throws IllegalArgumentException;
 
-	EbillAcceptorBuilder withOrderCurrencty(FinCurrency currency);
-
-	EbillAcceptorBuilder withDefaultCurrency();
-
-	EbillAcceptorBuilder withId(String orderId);
-
-	EbillAcceptorBuilder withConsumer(String email, LocalizationLanguage language, String name);
-
-	EbillAcceptorBuilder withConsumer(String email, LocalizationLanguage language);
-
-	EbillAcceptorBuilder withConsumerName(String name);
-
-	EbillAcceptorBuilder withConsumerEmail(String email);
-
-	EbillAcceptorBuilder withExternalId(String externalId);
-
-	EbillAcceptorBuilder withExternalId(Integer externalId);
-
-	EbillAcceptorBuilder withConsumerLanguage(LocalizationLanguage language);
-
-	EbillAcceptor build();
-
-	public static interface EbillAcceptor {
-
-	    Ebill accept();
-
-	}
-    }
-
-    EbillFetcherBuilder newEbillFetcherBuilder();
-
-    public static interface EbillFetcherBuilder {
-
-	EbillFetcherBuilder usingId(String id);
-
-	EbillFetcher build();
-
-	public static interface EbillFetcher {
-
-	    Ebill fetch();
-
-	}
-
-    }
-
-    EbillPaidMarkerBuilder newEbillPaidMarkerBuilder();
-
-    public static interface EbillPaidMarkerBuilder {
-
-	EbillPaidMarkerBuilder usingId(String id);
-
-	EbillPaidMarkerBuilder withReference(String reference);
-
-	EbillPaidMarkerBuilder withInstant(Instant instant);
-
-	default EbillPaidMarkerBuilder with(Instant instant, String reference) {
-	    return withReference(reference).withInstant(instant);
-	}
-
-	EbillPaidMarker build();
-
-	public static interface EbillPaidMarker {
-
-	    Ebill mark();
-
-	}
-    }
 }
