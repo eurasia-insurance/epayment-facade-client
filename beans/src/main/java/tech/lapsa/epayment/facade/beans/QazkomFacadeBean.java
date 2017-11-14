@@ -26,8 +26,8 @@ import tech.lapsa.epayment.facade.QazkomFacade;
 import tech.lapsa.java.commons.function.MyMaps;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
+import tech.lapsa.java.commons.io.MyFiles;
 import tech.lapsa.java.commons.logging.MyLogger;
-import tech.lapsa.java.commons.resources.Resources;
 import tech.lapsa.java.commons.security.MyCertificates;
 import tech.lapsa.java.commons.security.MyKeyStores;
 import tech.lapsa.java.commons.security.MyKeyStores.StoreType;
@@ -95,7 +95,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		final String KEYSTORE_FILE = qazkomConfig.getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_FILE);
 		MyStrings.requireNonEmpty(KEYSTORE_FILE, "KEYSTORE_FILE");
-		final InputStream KEYSTORE_FILE_STREAM = Resources.optionalAsStream(this.getClass(), KEYSTORE_FILE) //
+		final InputStream KEYSTORE_FILE_STREAM = MyFiles.optionalAsStream(KEYSTORE_FILE)//
 			.orElseThrow(() -> new RuntimeException("Keystore not found"));
 
 		final String KEYSTORE_TYPE_S = qazkomConfig
@@ -126,7 +126,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    {
 		final String KEYSTORE_FILE = qazkomConfig.getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_FILE);
 		MyStrings.requireNonEmpty(KEYSTORE_FILE, "KEYSTORE_FILE");
-		final InputStream KEYSTORE_FILE_STREAM = Resources.optionalAsStream(this.getClass(), KEYSTORE_FILE) //
+		final InputStream KEYSTORE_FILE_STREAM = MyFiles.optionalAsStream(KEYSTORE_FILE) //
 			.orElseThrow(() -> new RuntimeException("Keystore not found"));
 
 		final String KEYSTORE_TYPE_S = qazkomConfig.getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_TYPE);
