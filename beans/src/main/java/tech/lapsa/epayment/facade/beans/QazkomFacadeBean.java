@@ -1,5 +1,7 @@
 package tech.lapsa.epayment.facade.beans;
 
+import static tech.lapsa.java.commons.function.MyExceptions.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -24,6 +26,8 @@ import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.PaymentMethod;
 import tech.lapsa.epayment.facade.PaymentMethod.Http;
 import tech.lapsa.epayment.facade.QazkomFacade;
+import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
+import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyMaps;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
@@ -172,86 +176,92 @@ public class QazkomFacadeBean implements QazkomFacade {
     private EpaymentFacade epayments;
 
     @Override
-    public Invoice handleResponse(String responseXml) throws IllegalArgumentException, IllegalStateException {
-	MyObjects.requireNonNull(qazkomSettings, "qazkomSettings");
-	MyStrings.requireNonEmpty(responseXml, "responseXml");
+    public Invoice handleResponse(String responseXml) throws IllegalArgument, IllegalState {
+	return reThrowChecked(() -> {
 
-	logger.INFO.log("New response '%1$s'", responseXml);
+	    MyObjects.requireNonNull(qazkomSettings, "qazkomSettings");
+	    MyStrings.requireNonEmpty(responseXml, "responseXml");
 
-	QazkomPayment qp;
-	QazkomOrder qo;
-	Invoice i;
+	    logger.INFO.log("New response '%1$s'", responseXml);
 
-	try {
-	    logger.INFO.log("Validating response...");
-	    qp = QazkomPayment.builder() //
-		    .fromRawXml(responseXml) //
-		    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
-		    .build();
+	    QazkomPayment qp;
+	    QazkomOrder qo;
+	    Invoice i;
 
-	    qo = qoDAO.optionalByNumber(qp.getOrderNumber()) //
-		    .orElseThrow(() -> new IllegalArgumentException("No payment order found or reference is invlaid"));
+	    try {
+		logger.INFO.log("Validating response...");
+		qp = QazkomPayment.builder() //
+			.fromRawXml(responseXml) //
+			.withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
+			.build();
 
-	    qo.validate(qp);
+		qo = qoDAO.optionalByNumber(qp.getOrderNumber()) //
+			.orElseThrow(
+				() -> new IllegalArgumentException("No payment order found or reference is invlaid"));
 
-	    i = qo.getForInvoice();
-	    MyObjects.requireNonNull(i, "invoice");
-	    logger.INFO.log("Invoice number is %1$s for amount %2$.2d", i.getNumber(), i.getAmount());
+		qo.validate(qp);
 
-	    logger.INFO.log("Validated OK");
-	} catch (IllegalArgumentException | IllegalStateException e) {
-	    logger.WARN.log(e, "Error validating response : %1$s", e.getMessage());
-	    throw e;
-	}
+		i = qo.getForInvoice();
+		MyObjects.requireNonNull(i, "invoice");
+		logger.INFO.log("Invoice number is %1$s for amount %2$.2d", i.getNumber(), i.getAmount());
 
-	try {
-	    logger.INFO.log("Processing invoice %1$s...", i.getNumber());
-	    i.paidBy(qp);
-	    qo.paidBy(qp);
-	    i = invoiceDAO.save(i);
-	    qp = qpDAO.save(qp);
-	    qo = qoDAO.save(qo);
-	    epayments.completeAfterPayment(i);
-	    logger.INFO.log("Processed OK");
-	} catch (IllegalArgumentException | IllegalStateException e) {
-	    logger.WARN.log(e, "Error processing invoice : %1$s", e.getMessage());
-	    throw e;
-	}
+		logger.INFO.log("Validated OK");
+	    } catch (IllegalArgumentException | IllegalStateException e) {
+		logger.WARN.log(e, "Error validating response : %1$s", e.getMessage());
+		throw e;
+	    }
 
-	logger.INFO.log("HANDLED SUCCESSFULY invoice number = '%1$s'", i.getNumber());
-	return i;
+	    try {
+		logger.INFO.log("Processing invoice %1$s...", i.getNumber());
+		i.paidBy(qp);
+		qo.paidBy(qp);
+		i = invoiceDAO.save(i);
+		qp = qpDAO.save(qp);
+		qo = qoDAO.save(qo);
+		epayments.completeAfterPayment(i);
+		logger.INFO.log("Processed OK");
+	    } catch (IllegalArgumentException | IllegalStateException e) {
+		logger.WARN.log(e, "Error processing invoice : %1$s", e.getMessage());
+		throw e;
+	    }
+
+	    logger.INFO.log("HANDLED SUCCESSFULY invoice number = '%1$s'", i.getNumber());
+	    return i;
+	});
     }
 
     @Override
-    public PaymentMethod httpMethod(URI postbackURI, URI returnUri, Invoice forInvoice) {
-	MyObjects.requireNonNull(postbackURI, "postbackURI");
-	MyObjects.requireNonNull(returnUri, "returnUri");
-	MyObjects.requireNonNull(forInvoice, "forInvoice");
+    public PaymentMethod httpMethod(URI postbackURI, URI returnUri, Invoice forInvoice)
+	    throws IllegalArgument, IllegalState {
+	return reThrowChecked(() -> {
+	    MyObjects.requireNonNull(postbackURI, "postbackURI");
+	    MyObjects.requireNonNull(returnUri, "returnUri");
+	    MyObjects.requireNonNull(forInvoice, "forInvoice");
 
-	QazkomOrder o = qoDAO.optionalLatestForInvoice(forInvoice) //
-		.orElseGet(() -> {
-		    return qoDAO.save(QazkomOrder.builder() //
-			    .forInvoice(forInvoice) //
-			    .withGeneratedNumber(qoDAO::isUniqueNumber) //
-			    .withMerchant(qazkomSettings.QAZKOM_MERCHANT_ID, //
-				    qazkomSettings.QAZKOM_MERCHANT_NAME, //
-				    qazkomSettings.QAZKOM_MERCHANT_CERTIFICATE, //
-				    qazkomSettings.QAZKOM_MERCHANT_key) //
-			    .build());
-		});
+	    QazkomOrder o = qoDAO.optionalLatestForInvoice(forInvoice) //
+		    .orElseGet(() -> {
+			return qoDAO.save(QazkomOrder.builder() //
+				.forInvoice(forInvoice) //
+				.withGeneratedNumber(qoDAO::isUniqueNumber) //
+				.withMerchant(qazkomSettings.QAZKOM_MERCHANT_ID, //
+					qazkomSettings.QAZKOM_MERCHANT_NAME, //
+					qazkomSettings.QAZKOM_MERCHANT_CERTIFICATE, //
+					qazkomSettings.QAZKOM_MERCHANT_key) //
+				.build());
+		    });
 
-	Http http = new Http(qazkomSettings.QAZKOM_EPAY_URI, qazkomSettings.QAZKOM_EPAY_HTTP_METHOD,
-		MyMaps.of(
-			"Signed_Order_B64", MyStrings.requireNonEmpty(o.getOrderDoc().getBase64Xml(), "content"), //
-			"template", qazkomSettings.QAZKOM_EPAY_TEMPLATE, //
-			"email", forInvoice.getConsumerEmail(), //
-			"PostLink", postbackURI.toString(),
-			"Language", forInvoice.getConsumerPreferLanguage().getTag(), //
-			"appendix", o.getCartDoc().getBase64Xml(), //
-			"BackLink", returnUri.toString() //
-		));
-	return new QazkomPaymentMethod(http);
-
+	    Http http = new Http(qazkomSettings.QAZKOM_EPAY_URI, qazkomSettings.QAZKOM_EPAY_HTTP_METHOD,
+		    MyMaps.of(
+			    "Signed_Order_B64", MyStrings.requireNonEmpty(o.getOrderDoc().getBase64Xml(), "content"), //
+			    "template", qazkomSettings.QAZKOM_EPAY_TEMPLATE, //
+			    "email", forInvoice.getConsumerEmail(), //
+			    "PostLink", postbackURI.toString(),
+			    "Language", forInvoice.getConsumerPreferLanguage().getTag(), //
+			    "appendix", o.getCartDoc().getBase64Xml(), //
+			    "BackLink", returnUri.toString() //
+	    ));
+	    return new QazkomPaymentMethod(http);
+	});
     }
 
     final class QazkomPaymentMethod implements PaymentMethod {
