@@ -77,7 +77,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     @Override
     public Invoice completeAndAccept(InvoiceBuilder builder) throws IllegalArgumentException {
 	return accept(builder.testingNumberWith(dao::isUniqueNumber) //
-		.withCurrencty(FinCurrency.KZT) //
+		.withCurrency(FinCurrency.KZT) //
 		.build());
     }
 
