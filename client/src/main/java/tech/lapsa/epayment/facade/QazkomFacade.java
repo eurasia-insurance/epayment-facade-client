@@ -1,56 +1,16 @@
 package tech.lapsa.epayment.facade;
 
 import java.net.URI;
-import java.util.Map;
 
 import javax.ejb.Local;
 
-import com.lapsa.international.localization.LocalizationLanguage;
+import tech.lapsa.epayment.domain.Invoice;
+import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
+import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 
 @Local
 public interface QazkomFacade {
+    Invoice handleResponse(String responseXml) throws IllegalArgument, IllegalState;
 
-    ResponseHandlerBuilder newResponseHandlerBuilder();
-
-    public static interface ResponseHandlerBuilder {
-
-	ResponseHandlerBuilder withXml(String responseXml);
-
-	ResponseHandler build();
-
-	public static interface ResponseHandler {
-
-	    Ebill handle();
-
-	}
-
-    }
-
-    PaymentMethodBuilder newPaymentMethodBuilder();
-
-    public static interface PaymentMethodBuilder {
-	PaymentMethodBuilder withPostbackURI(URI postbackURL);
-
-	PaymentMethodBuilder withReturnURI(URI returnUri);
-
-	PaymentMethodBuilder withConsumerLanguage(LocalizationLanguage language);
-
-	PaymentMethodBuilder forEbill(Ebill bill);
-
-	PaymentMethod build();
-
-	public static interface PaymentMethod {
-
-	    HttpMethod getHttp();
-
-	    public static interface HttpMethod {
-		URI getHttpAddress();
-
-		String getHttpMethod();
-
-		Map<String, String> getHttpParams();
-	    }
-	}
-    }
-
+    PaymentMethod httpMethod(URI postbackURI, URI returnUri, Invoice forInvoice) throws IllegalArgument, IllegalState;
 }

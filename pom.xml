@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>tech.lapsa.maven</groupId>
@@ -22,15 +23,14 @@
 	<properties>
 		<!-- BOMS -->
 		<javax-javaee-bom.version>7.0</javax-javaee-bom.version>
-		<java-commons.version>1.0</java-commons.version>
+		<java-commons.version>1.1-SNAPSHOT</java-commons.version>
 		<!-- tech -->
+		<epayment-domain.version>4.0-SNAPSHOT</epayment-domain.version>
 		<epayment-dao.version>1.1-SNAPSHOT</epayment-dao.version>
 		<epayment-notifier.version>1.1-SNAPSHOT</epayment-notifier.version>
 		<!-- oldies -->
 		<international-lib.version>3.3-SNAPSHOT</international-lib.version>
 		<fin-lib.version>2.1</fin-lib.version>
-		<kkb-lib.version>3.3-SNAPSHOT</kkb-lib.version>
-		<kkb-services-impl-default.version>3.2-SNAPSHOT</kkb-services-impl-default.version>
 	</properties>
 
 	<dependencyManagement>
@@ -77,6 +77,12 @@
 				<version>${project.version}</version>
 				<type>ejb</type>
 			</dependency>
+			<!-- tech -->
+			<dependency>
+				<groupId>tech.lapsa.epayment</groupId>
+				<artifactId>epayment-domain</artifactId>
+				<version>${epayment-domain.version}</version>
+			</dependency>
 			<!-- oldies -->
 			<dependency>
 				<groupId>com.lapsa.international-lib</groupId>
@@ -91,19 +97,6 @@
 				<version>${fin-lib.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.lapsa.kkb-lib</groupId>
-				<artifactId>kkb-root</artifactId>
-				<version>${kkb-lib.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.lapsa.kkb-lib</groupId>
-				<artifactId>kkb-services-impl-default</artifactId>
-				<version>${kkb-services-impl-default.version}</version>
-				<type>ejb</type>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
