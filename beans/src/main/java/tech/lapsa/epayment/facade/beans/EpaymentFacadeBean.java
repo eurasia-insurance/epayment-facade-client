@@ -48,7 +48,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Override
     public URI getDefaultPaymentURI(Invoice invoice) throws IllegalArgument, IllegalState {
-	return reThrowChecked(() -> {
+	return reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(invoice, "invoice");
 	    String pattern = epaymentConfig.getProperty(Constants.PROPERTY_DEFAULT_PAYMENT_URI_PATTERN);
 	    try {
@@ -67,7 +67,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Override
     public Invoice accept(final Invoice invoice) throws IllegalArgument, IllegalState {
-	return reThrowChecked(() -> {
+	return reThrowAsChecked(() -> {
 	    Invoice saved = dao.save(invoice);
 	    saved.unlazy();
 	    notifier.newNotificationBuilder() //
@@ -84,7 +84,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Override
     public Invoice completeAndAccept(InvoiceBuilder builder) throws IllegalArgument, IllegalState {
-	return reThrowChecked(() -> {
+	return reThrowAsChecked(() -> {
 	    return accept(builder.testingNumberWith(dao::isUniqueNumber) //
 		    .withCurrency(FinCurrency.KZT) //
 		    .build());
@@ -93,7 +93,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Override
     public Invoice forNumber(String number) throws IllegalArgument, IllegalState, InvoiceNotFound {
-	return reThrowChecked(() -> {
+	return reThrowAsChecked(() -> {
 	    MyStrings.requireNonEmpty(number, "number");
 	    return dao.optionalByNumber(MyStrings.requireNonEmpty(number, "number")) //
 		    .orElseThrow(() -> new InvoiceNotFound());
@@ -112,7 +112,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     @Override
     public void completeAfterPayment(Invoice invoice) throws IllegalArgument, IllegalState {
-	reThrowChecked(() -> {
+	reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(invoice, "invoice");
 
 	    invoice.unlazy();

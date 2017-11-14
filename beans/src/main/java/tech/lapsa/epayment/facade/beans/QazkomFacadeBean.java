@@ -177,7 +177,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Override
     public Invoice handleResponse(String responseXml) throws IllegalArgument, IllegalState {
-	return reThrowChecked(() -> {
+	return reThrowAsChecked(() -> {
 
 	    MyObjects.requireNonNull(qazkomSettings, "qazkomSettings");
 	    MyStrings.requireNonEmpty(responseXml, "responseXml");
@@ -233,7 +233,7 @@ public class QazkomFacadeBean implements QazkomFacade {
     @Override
     public PaymentMethod httpMethod(URI postbackURI, URI returnUri, Invoice forInvoice)
 	    throws IllegalArgument, IllegalState {
-	return reThrowChecked(() -> {
+	return reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(postbackURI, "postbackURI");
 	    MyObjects.requireNonNull(returnUri, "returnUri");
 	    MyObjects.requireNonNull(forInvoice, "forInvoice");
