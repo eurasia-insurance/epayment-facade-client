@@ -21,6 +21,7 @@ import tech.lapsa.epayment.dao.InvoiceDAO;
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 import tech.lapsa.epayment.facade.EpaymentFacade;
+import tech.lapsa.epayment.facade.InvoiceNotFound;
 import tech.lapsa.epayment.notifier.NotificationChannel;
 import tech.lapsa.epayment.notifier.NotificationRecipientType;
 import tech.lapsa.epayment.notifier.NotificationRequestStage;
@@ -81,10 +82,10 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     }
 
     @Override
-    public Invoice forNumber(String number) throws IllegalArgumentException {
+    public Invoice forNumber(String number) throws IllegalArgumentException, InvoiceNotFound {
 	MyStrings.requireNonEmpty(number, "number");
 	return dao.optionalByNumber(MyStrings.requireNonEmpty(number, "number")) //
-		.orElseThrow(() -> new IllegalStateException("not found"));
+		.orElseThrow(() -> new InvoiceNotFound());
     }
 
     private static final String JNDI_JMS_CONNECTION_FACTORY = "epayment/jms/connectionFactory";
