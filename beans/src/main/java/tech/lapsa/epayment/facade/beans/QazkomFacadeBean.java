@@ -1,5 +1,6 @@
 package tech.lapsa.epayment.facade.beans;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -93,60 +94,71 @@ public class QazkomFacadeBean implements QazkomFacade {
 		QAZKOM_MERCHANT_NAME = qazkomConfig.getProperty(QazkomConstants.PROPERTY_MERCHANT_NAME);
 		MyStrings.requireNonEmpty(QAZKOM_MERCHANT_NAME, "QAZKOM_MERCHANT_NAME");
 
+	    }
+
+	    {
 		final String KEYSTORE_FILE = qazkomConfig.getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_FILE);
 		MyStrings.requireNonEmpty(KEYSTORE_FILE, "KEYSTORE_FILE");
-		final InputStream KEYSTORE_FILE_STREAM = MyFiles.optionalAsStream(KEYSTORE_FILE)//
-			.orElseThrow(() -> new RuntimeException("Keystore not found"));
 
-		final String KEYSTORE_TYPE_S = qazkomConfig
-			.getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_TYPE);
-		MyStrings.requireNonEmpty(KEYSTORE_TYPE_S, "KEYSTORE_TYPE_S");
-		final StoreType KEYSTORE_TYPE = StoreType.valueOf(KEYSTORE_TYPE_S);
-		MyObjects.requireNonNull(KEYSTORE_TYPE, "KEYSTORE_TYPE");
+		try (final InputStream KEYSTORE_FILE_STREAM = MyFiles.optionalAsStream(KEYSTORE_FILE)//
+			.orElseThrow(() -> new RuntimeException("Keystore not found"))) {
 
-		final String KEYSTORE_PASSWORD = qazkomConfig
-			.getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_PASSWORD);
-		MyStrings.requireNonEmpty(KEYSTORE_PASSWORD, "KEYSTORE_PASSWORD");
+		    final String KEYSTORE_TYPE_S = qazkomConfig
+			    .getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_TYPE);
+		    MyStrings.requireNonEmpty(KEYSTORE_TYPE_S, "KEYSTORE_TYPE_S");
+		    final StoreType KEYSTORE_TYPE = StoreType.valueOf(KEYSTORE_TYPE_S);
+		    MyObjects.requireNonNull(KEYSTORE_TYPE, "KEYSTORE_TYPE");
 
-		final KeyStore KEYSTORE = MyKeyStores.from(KEYSTORE_FILE_STREAM, KEYSTORE_TYPE, KEYSTORE_PASSWORD) //
-			.orElseThrow(() -> new RuntimeException("Can not load keystore"));
+		    final String KEYSTORE_PASSWORD = qazkomConfig
+			    .getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_PASSWORD);
+		    MyStrings.requireNonEmpty(KEYSTORE_PASSWORD, "KEYSTORE_PASSWORD");
 
-		final String MERCHANT_ALIAS = qazkomConfig
-			.getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_KEYALIAS);
-		MyStrings.requireNonEmpty(MERCHANT_ALIAS, "MERCHANT_ALIAS");
+		    final KeyStore KEYSTORE = MyKeyStores.from(KEYSTORE_FILE_STREAM, KEYSTORE_TYPE, KEYSTORE_PASSWORD) //
+			    .orElseThrow(() -> new RuntimeException("Can not load keystore"));
 
-		QAZKOM_MERCHANT_key = MyPrivateKeys.from(KEYSTORE, MERCHANT_ALIAS, KEYSTORE_PASSWORD) //
-			.orElseThrow(() -> new RuntimeException("Can't find key entry"));
+		    final String MERCHANT_ALIAS = qazkomConfig
+			    .getProperty(QazkomConstants.PROPERTY_MERCHANT_KEYSTORE_KEYALIAS);
+		    MyStrings.requireNonEmpty(MERCHANT_ALIAS, "MERCHANT_ALIAS");
 
-		QAZKOM_MERCHANT_CERTIFICATE = MyCertificates.from(KEYSTORE, MERCHANT_ALIAS) //
-			.orElseThrow(() -> new RuntimeException("Can find key entry"));
+		    QAZKOM_MERCHANT_key = MyPrivateKeys.from(KEYSTORE, MERCHANT_ALIAS, KEYSTORE_PASSWORD) //
+			    .orElseThrow(() -> new RuntimeException("Can't find key entry"));
 
+		    QAZKOM_MERCHANT_CERTIFICATE = MyCertificates.from(KEYSTORE, MERCHANT_ALIAS) //
+			    .orElseThrow(() -> new RuntimeException("Can find key entry"));
+		} catch (IOException e) {
+		    throw new RuntimeException(e);
+		}
 	    }
 
 	    {
 		final String KEYSTORE_FILE = qazkomConfig.getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_FILE);
 		MyStrings.requireNonEmpty(KEYSTORE_FILE, "KEYSTORE_FILE");
-		final InputStream KEYSTORE_FILE_STREAM = MyFiles.optionalAsStream(KEYSTORE_FILE) //
-			.orElseThrow(() -> new RuntimeException("Keystore not found"));
 
-		final String KEYSTORE_TYPE_S = qazkomConfig.getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_TYPE);
-		MyStrings.requireNonEmpty(KEYSTORE_TYPE_S, "KEYSTORE_TYPE_S");
-		final StoreType KEYSTORE_TYPE = StoreType.valueOf(KEYSTORE_TYPE_S);
-		MyObjects.requireNonNull(KEYSTORE_TYPE, "KEYSTORE_TYPE");
+		try (final InputStream KEYSTORE_FILE_STREAM = MyFiles.optionalAsStream(KEYSTORE_FILE) //
+			.orElseThrow(() -> new RuntimeException("Keystore not found"))) {
 
-		final String KEYSTORE_PASSWORD = qazkomConfig
-			.getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_PASSWORD);
-		MyStrings.requireNonEmpty(KEYSTORE_PASSWORD, "KEYSTORE_PASSWORD");
+		    final String KEYSTORE_TYPE_S = qazkomConfig
+			    .getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_TYPE);
+		    MyStrings.requireNonEmpty(KEYSTORE_TYPE_S, "KEYSTORE_TYPE_S");
+		    final StoreType KEYSTORE_TYPE = StoreType.valueOf(KEYSTORE_TYPE_S);
+		    MyObjects.requireNonNull(KEYSTORE_TYPE, "KEYSTORE_TYPE");
 
-		final KeyStore KEYSTORE = MyKeyStores.from(KEYSTORE_FILE_STREAM, KEYSTORE_TYPE, KEYSTORE_PASSWORD) //
-			.orElseThrow(() -> new RuntimeException("Can not load keystore"));
+		    final String KEYSTORE_PASSWORD = qazkomConfig
+			    .getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_PASSWORD);
+		    MyStrings.requireNonEmpty(KEYSTORE_PASSWORD, "KEYSTORE_PASSWORD");
 
-		final String BANK_ALIAS = qazkomConfig.getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_CERTALIAS);
-		MyStrings.requireNonEmpty(BANK_ALIAS, "BANK_ALIAS");
+		    final KeyStore KEYSTORE = MyKeyStores.from(KEYSTORE_FILE_STREAM, KEYSTORE_TYPE, KEYSTORE_PASSWORD) //
+			    .orElseThrow(() -> new RuntimeException("Can not load keystore"));
 
-		QAZKOM_BANK_CERTIFICATE = MyCertificates.from(KEYSTORE, BANK_ALIAS) //
-			.orElseThrow(() -> new RuntimeException("Can find cert entry"));
+		    final String BANK_ALIAS = qazkomConfig
+			    .getProperty(QazkomConstants.PROPERTY_BANK_CERTSTORE_CERTALIAS);
+		    MyStrings.requireNonEmpty(BANK_ALIAS, "BANK_ALIAS");
 
+		    QAZKOM_BANK_CERTIFICATE = MyCertificates.from(KEYSTORE, BANK_ALIAS) //
+			    .orElseThrow(() -> new RuntimeException("Can find cert entry"));
+		} catch (IOException e) {
+		    throw new RuntimeException(e);
+		}
 	    }
 	}
     }
