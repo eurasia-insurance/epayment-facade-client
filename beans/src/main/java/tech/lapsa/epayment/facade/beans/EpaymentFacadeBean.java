@@ -1,10 +1,13 @@
 package tech.lapsa.epayment.facade.beans;
 
+import static tech.lapsa.java.commons.function.MyExceptions.*;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
 import javax.annotation.Resource;
+import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.jms.Connection;
@@ -26,6 +29,8 @@ import tech.lapsa.epayment.notifier.NotificationChannel;
 import tech.lapsa.epayment.notifier.NotificationRecipientType;
 import tech.lapsa.epayment.notifier.NotificationRequestStage;
 import tech.lapsa.epayment.notifier.Notifier;
+import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
+import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 
@@ -42,50 +47,57 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private Properties epaymentConfig;
 
     @Override
-    public URI getDefaultPaymentURI(Invoice invoice) throws IllegalArgumentException {
-	MyObjects.requireNonNull(invoice, "invoice");
-	String pattern = epaymentConfig.getProperty(Constants.PROPERTY_DEFAULT_PAYMENT_URI_PATTERN);
-	try {
-	    String parsed = pattern //
-		    .replace("@INVOICE_ID@", invoice.getNumber()) //
-		    .replace("@INVOICE_NUMBER@", invoice.getNumber()) //
-		    .replace("@LANG@", invoice.getConsumerPreferLanguage().getTag());
-	    return new URI(parsed);
-	} catch (URISyntaxException e) {
-	    throw new IllegalArgumentException(e);
-	} catch (NullPointerException e) {
-	    throw new IllegalArgumentException(e);
-	}
-
+    public URI getDefaultPaymentURI(final Invoice invoice) throws IllegalArgument, IllegalState {
+	return reThrowAsChecked(() -> {
+	    MyObjects.requireNonNull(invoice, "invoice");
+	    final String pattern = epaymentConfig.getProperty(Constants.PROPERTY_DEFAULT_PAYMENT_URI_PATTERN);
+	    try {
+		final String parsed = pattern //
+			.replace("@INVOICE_ID@", invoice.getNumber()) //
+			.replace("@INVOICE_NUMBER@", invoice.getNumber()) //
+			.replace("@LANG@", invoice.getConsumerPreferLanguage().getTag());
+		return new URI(parsed);
+	    } catch (final URISyntaxException e) {
+		throw new IllegalArgumentException(e);
+	    } catch (final NullPointerException e) {
+		throw new IllegalArgumentException(e);
+	    }
+	});
     }
 
     @Override
-    public Invoice accept(final Invoice invoice) throws IllegalArgumentException {
-	Invoice saved = dao.save(invoice);
-	saved.unlazy();
-	notifier.newNotificationBuilder() //
-		.withChannel(NotificationChannel.EMAIL) //
-		.withEvent(NotificationRequestStage.PAYMENT_LINK) //
-		.withRecipient(NotificationRecipientType.REQUESTER) //
-		.withProperty("paymentUrl", getDefaultPaymentURI(saved).toString()) //
-		.forEntity(saved) //
-		.build() //
-		.send();
-	return saved;
+    public Invoice accept(final Invoice invoice) throws IllegalArgument, IllegalState {
+	return reThrowAsChecked(() -> {
+	    final Invoice saved = dao.save(invoice);
+	    saved.unlazy();
+	    notifier.newNotificationBuilder() //
+		    .withChannel(NotificationChannel.EMAIL) //
+		    .withEvent(NotificationRequestStage.PAYMENT_LINK) //
+		    .withRecipient(NotificationRecipientType.REQUESTER) //
+		    .withProperty("paymentUrl", getDefaultPaymentURI(saved).toString()) //
+		    .forEntity(saved) //
+		    .build() //
+		    .send();
+	    return saved;
+	});
     }
 
     @Override
-    public Invoice completeAndAccept(InvoiceBuilder builder) throws IllegalArgumentException {
-	return accept(builder.testingNumberWith(dao::isUniqueNumber) //
-		.withCurrency(FinCurrency.KZT) //
-		.build());
+    public Invoice completeAndAccept(final InvoiceBuilder builder) throws IllegalArgument, IllegalState {
+	return reThrowAsChecked(() -> {
+	    return accept(builder.testingNumberWith(dao::isUniqueNumber) //
+		    .withCurrency(FinCurrency.KZT) //
+		    .build());
+	});
     }
 
     @Override
-    public Invoice forNumber(String number) throws IllegalArgumentException, InvoiceNotFound {
-	MyStrings.requireNonEmpty(number, "number");
-	return dao.optionalByNumber(MyStrings.requireNonEmpty(number, "number")) //
-		.orElseThrow(() -> new InvoiceNotFound());
+    public Invoice forNumber(final String number) throws IllegalArgument, IllegalState, InvoiceNotFound {
+	return reThrowAsChecked(() -> {
+	    MyStrings.requireNonEmpty(number, "number");
+	    return dao.optionalByNumber(MyStrings.requireNonEmpty(number, "number")) //
+		    .orElseThrow(() -> new InvoiceNotFound());
+	});
     }
 
     private static final String JNDI_JMS_CONNECTION_FACTORY = "epayment/jms/connectionFactory";
@@ -99,26 +111,28 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private Destination paidEbillsDestination;
 
     @Override
-    public void completeAfterPayment(Invoice invoice) {
-	MyObjects.requireNonNull(invoice, "invoice");
+    public void completeAfterPayment(final Invoice invoice) throws IllegalArgument, IllegalState {
+	reThrowAsChecked(() -> {
+	    MyObjects.requireNonNull(invoice, "invoice");
 
-	invoice.unlazy();
+	    invoice.unlazy();
 
-	notifier.newNotificationBuilder() //
-		.withChannel(NotificationChannel.EMAIL) //
-		.withEvent(NotificationRequestStage.PAYMENT_SUCCESS) //
-		.withRecipient(NotificationRecipientType.REQUESTER) //
-		.forEntity(invoice) //
-		.build() //
-		.send();
+	    notifier.newNotificationBuilder() //
+		    .withChannel(NotificationChannel.EMAIL) //
+		    .withEvent(NotificationRequestStage.PAYMENT_SUCCESS) //
+		    .withRecipient(NotificationRecipientType.REQUESTER) //
+		    .forEntity(invoice) //
+		    .build() //
+		    .send();
 
-	try (Connection connection = connectionFactory.createConnection()) {
-	    Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	    MessageProducer producer = session.createProducer(paidEbillsDestination);
-	    Message msg = session.createObjectMessage(invoice);
-	    producer.send(msg);
-	} catch (JMSException e) {
-	    throw new IllegalStateException("Failed to send invoice payment info", e);
-	}
+	    try (Connection connection = connectionFactory.createConnection()) {
+		final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		final MessageProducer producer = session.createProducer(paidEbillsDestination);
+		final Message msg = session.createObjectMessage(invoice);
+		producer.send(msg);
+	    } catch (final JMSException e) {
+		throw new EJBException("Failed to send invoice payment info", e);
+	    }
+	});
     }
 }
