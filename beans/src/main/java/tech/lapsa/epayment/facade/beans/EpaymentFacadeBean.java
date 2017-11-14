@@ -99,7 +99,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private Destination paidEbillsDestination;
 
     @Override
-    public void markPaid(Invoice invoice) {
+    public void completeAfterPayment(Invoice invoice) {
 	MyObjects.requireNonNull(invoice, "invoice");
 
 	invoice.unlazy();

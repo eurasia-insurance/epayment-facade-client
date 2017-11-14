@@ -211,7 +211,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    i = invoiceDAO.save(i);
 	    qp = qpDAO.save(qp);
 	    qo = qoDAO.save(qo);
-	    epayments.markPaid(i);
+	    epayments.completeAfterPayment(i);
 	    logger.INFO.log("Processed OK");
 	} catch (IllegalArgumentException | IllegalStateException e) {
 	    logger.WARN.log(e, "Error processing invoice : %1$s", e.getMessage());
