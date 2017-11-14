@@ -18,7 +18,7 @@ public interface EpaymentFacade {
 
     Invoice forNumber(String number) throws IllegalArgumentException, InvoiceNotFound;
 
-    // TODO rename to completePayment
+    // TODO REFACTOR : Need to rename to completePayment
     void markPaid(Invoice invoice) throws IllegalArgumentException;
 
 }
