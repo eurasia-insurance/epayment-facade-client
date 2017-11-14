@@ -47,19 +47,19 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private Properties epaymentConfig;
 
     @Override
-    public URI getDefaultPaymentURI(Invoice invoice) throws IllegalArgument, IllegalState {
+    public URI getDefaultPaymentURI(final Invoice invoice) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(invoice, "invoice");
-	    String pattern = epaymentConfig.getProperty(Constants.PROPERTY_DEFAULT_PAYMENT_URI_PATTERN);
+	    final String pattern = epaymentConfig.getProperty(Constants.PROPERTY_DEFAULT_PAYMENT_URI_PATTERN);
 	    try {
-		String parsed = pattern //
+		final String parsed = pattern //
 			.replace("@INVOICE_ID@", invoice.getNumber()) //
 			.replace("@INVOICE_NUMBER@", invoice.getNumber()) //
 			.replace("@LANG@", invoice.getConsumerPreferLanguage().getTag());
 		return new URI(parsed);
-	    } catch (URISyntaxException e) {
+	    } catch (final URISyntaxException e) {
 		throw new IllegalArgumentException(e);
-	    } catch (NullPointerException e) {
+	    } catch (final NullPointerException e) {
 		throw new IllegalArgumentException(e);
 	    }
 	});
@@ -68,7 +68,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     @Override
     public Invoice accept(final Invoice invoice) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
-	    Invoice saved = dao.save(invoice);
+	    final Invoice saved = dao.save(invoice);
 	    saved.unlazy();
 	    notifier.newNotificationBuilder() //
 		    .withChannel(NotificationChannel.EMAIL) //
@@ -83,7 +83,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     }
 
     @Override
-    public Invoice completeAndAccept(InvoiceBuilder builder) throws IllegalArgument, IllegalState {
+    public Invoice completeAndAccept(final InvoiceBuilder builder) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    return accept(builder.testingNumberWith(dao::isUniqueNumber) //
 		    .withCurrency(FinCurrency.KZT) //
@@ -92,7 +92,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     }
 
     @Override
-    public Invoice forNumber(String number) throws IllegalArgument, IllegalState, InvoiceNotFound {
+    public Invoice forNumber(final String number) throws IllegalArgument, IllegalState, InvoiceNotFound {
 	return reThrowAsChecked(() -> {
 	    MyStrings.requireNonEmpty(number, "number");
 	    return dao.optionalByNumber(MyStrings.requireNonEmpty(number, "number")) //
@@ -111,7 +111,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private Destination paidEbillsDestination;
 
     @Override
-    public void completeAfterPayment(Invoice invoice) throws IllegalArgument, IllegalState {
+    public void completeAfterPayment(final Invoice invoice) throws IllegalArgument, IllegalState {
 	reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(invoice, "invoice");
 
@@ -126,11 +126,11 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		    .send();
 
 	    try (Connection connection = connectionFactory.createConnection()) {
-		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		MessageProducer producer = session.createProducer(paidEbillsDestination);
-		Message msg = session.createObjectMessage(invoice);
+		final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		final MessageProducer producer = session.createProducer(paidEbillsDestination);
+		final Message msg = session.createObjectMessage(invoice);
 		producer.send(msg);
-	    } catch (JMSException e) {
+	    } catch (final JMSException e) {
 		throw new EJBException("Failed to send invoice payment info", e);
 	    }
 	});
