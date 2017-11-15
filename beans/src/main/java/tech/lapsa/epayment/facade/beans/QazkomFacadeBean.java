@@ -203,7 +203,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		i = qo.getForInvoice();
 		MyObjects.requireNonNull(i, "invoice");
-		logger.INFO.log("Invoice number is %1$s for amount %2$.2d", i.getNumber(), i.getAmount());
+		logger.INFO.log("Invoice number is %1$s for amount %2$f", i.getNumber(), i.getAmount());
 
 		logger.INFO.log("Validated OK");
 	    } catch (IllegalArgumentException | IllegalStateException e) {
