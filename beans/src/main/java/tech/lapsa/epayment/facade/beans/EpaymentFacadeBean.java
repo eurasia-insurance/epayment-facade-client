@@ -20,8 +20,6 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import com.lapsa.fin.FinCurrency;
-
 import tech.lapsa.epayment.dao.InvoiceDAO;
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
@@ -91,7 +89,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     public Invoice completeAndAccept(final InvoiceBuilder builder) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    return accept(builder.testingNumberWith(dao::isUniqueNumber) //
-		    .withCurrency(FinCurrency.KZT) //
 		    .build());
 	});
     }

@@ -30,7 +30,6 @@
 		<epayment-notifier.version>1.1-SNAPSHOT</epayment-notifier.version>
 		<!-- oldies -->
 		<international-lib.version>3.3-SNAPSHOT</international-lib.version>
-		<fin-lib.version>2.1</fin-lib.version>
 	</properties>
 
 	<dependencyManagement>
@@ -88,13 +87,6 @@
 				<groupId>com.lapsa.international-lib</groupId>
 				<artifactId>international-root</artifactId>
 				<version>${international-lib.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.lapsa.fin-lib</groupId>
-				<artifactId>fin-root</artifactId>
-				<version>${fin-lib.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
