@@ -14,6 +14,8 @@ import java.util.Properties;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import tech.lapsa.epayment.dao.InvoiceDAO;
@@ -44,7 +46,7 @@ public class QazkomFacadeBean implements QazkomFacade {
     private final MyLogger logger = MyLogger.newBuilder() //
 	    .withNameOf(QazkomFacade.class) //
 	    .addWithPrefix("QAZKOM") //
-	    .addWithCAPS() //
+	    // .addWithCAPS() //
 	    .build();
 
     @Resource(lookup = QazkomConstants.JNDI_QAZKOM_CONFIG)
@@ -176,7 +178,8 @@ public class QazkomFacadeBean implements QazkomFacade {
     private EpaymentFacade epayments;
 
     @Override
-    public Invoice handleResponse(String responseXml) throws IllegalArgument, IllegalState {
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Invoice handleResponse(final String responseXml) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 
 	    MyObjects.requireNonNull(qazkomSettings, "qazkomSettings");
@@ -184,53 +187,43 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 	    logger.INFO.log("New response '%1$s'", responseXml);
 
-	    QazkomPayment qp;
-	    QazkomOrder qo;
-	    Invoice i;
-
 	    try {
-		logger.INFO.log("Validating response...");
-		qp = QazkomPayment.builder() //
+		final QazkomPayment qp = qpDAO.save(QazkomPayment.builder() //
 			.fromRawXml(responseXml) //
 			.withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
-			.build();
+			.build());
+		logger.INFO.log("QazkomPayment OK - '%1$s'", qp);
 
-		qo = qoDAO.optionalByNumber(qp.getOrderNumber()) //
-			.orElseThrow(
-				() -> new IllegalArgumentException("No payment order found or reference is invlaid"));
+		final QazkomOrder qo = qoDAO.optionalByNumber(qp.getOrderNumber()) //
+			.orElseThrow(illegalArgumentSupplierFormat(
+				"No QazkomOrder found or reference is invlaid - '%1$s'", qp.getOrderNumber()));
+		logger.INFO.log("QazkomOrder OK - '%1$s'", qo);
 
-		qo.validate(qp);
+		final Invoice i = qo.optionalForInvoice() //
+			.orElseThrow(illegalStateSupplierFormat("No Invoice attached - '%1$s'", qo));
+		logger.INFO.log("Invoice OK - '%1$s'", i);
 
-		i = qo.getForInvoice();
-		MyObjects.requireNonNull(i, "invoice");
-		logger.INFO.log("Invoice number is %1$s for amount %2$f", i.getNumber(), i.getAmount());
-
-		logger.INFO.log("Validated OK");
-	    } catch (IllegalArgumentException | IllegalStateException e) {
-		logger.WARN.log(e, "Error validating response : %1$s", e.getMessage());
-		throw e;
-	    }
-
-	    try {
-		logger.INFO.log("Processing invoice %1$s...", i.getNumber());
 		i.paidBy(qp);
 		qo.paidBy(qp);
-		i = invoiceDAO.save(i);
-		qp = qpDAO.save(qp);
-		qo = qoDAO.save(qo);
+
+		qpDAO.save(qp);
+		qoDAO.save(qo);
+		invoiceDAO.save(i);
+
+		logger.INFO.log("Ivoice has paid successfuly '%1$s'", i);
+
 		epayments.completeAfterPayment(i);
-		logger.INFO.log("Processed OK");
+
+		return i;
 	    } catch (IllegalArgumentException | IllegalStateException e) {
-		logger.WARN.log(e, "Error processing invoice : %1$s", e.getMessage());
+		logger.WARN.log(e, "Error processing response : %1$s", e.getMessage());
 		throw e;
 	    }
-
-	    logger.INFO.log("HANDLED SUCCESSFULY invoice number = '%1$s'", i.getNumber());
-	    return i;
 	});
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public PaymentMethod httpMethod(URI postbackURI, URI returnUri, Invoice forInvoice)
 	    throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {

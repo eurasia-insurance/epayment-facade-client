@@ -9,6 +9,8 @@ import java.util.Properties;
 import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -47,6 +49,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private Properties epaymentConfig;
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public URI getDefaultPaymentURI(final Invoice invoice) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(invoice, "invoice");
@@ -66,6 +69,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Invoice accept(final Invoice invoice) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    final Invoice saved = dao.save(invoice);
@@ -83,6 +87,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Invoice completeAndAccept(final InvoiceBuilder builder) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    return accept(builder.testingNumberWith(dao::isUniqueNumber) //
@@ -92,6 +97,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Invoice forNumber(final String number) throws IllegalArgument, IllegalState, InvoiceNotFound {
 	return reThrowAsChecked(() -> {
 	    MyStrings.requireNonEmpty(number, "number");
@@ -111,6 +117,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private Destination paidEbillsDestination;
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void completeAfterPayment(final Invoice invoice) throws IllegalArgument, IllegalState {
 	reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(invoice, "invoice");
