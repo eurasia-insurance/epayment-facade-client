@@ -6,6 +6,7 @@ import javax.ejb.Local;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
+import tech.lapsa.epayment.domain.Payment;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 
@@ -18,7 +19,7 @@ public interface EpaymentFacade {
 
     Invoice completeAndAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgument, IllegalState;
 
-    Invoice forNumber(String number) throws IllegalArgument, IllegalState, InvoiceNotFound;
+    Invoice invoiceByNumber(String number) throws IllegalArgument, IllegalState, InvoiceNotFound;
 
-    void completeAfterPayment(Invoice invoice) throws IllegalArgument, IllegalState;
+    void invoiceHasPaid(Invoice invoice, Payment payment) throws IllegalArgument, IllegalState;
 }
