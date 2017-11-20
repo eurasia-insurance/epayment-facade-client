@@ -18,7 +18,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
-import tech.lapsa.epayment.dao.InvoiceDAO;
 import tech.lapsa.epayment.dao.QazkomOrderDAO;
 import tech.lapsa.epayment.dao.QazkomPaymentDAO;
 import tech.lapsa.epayment.domain.Invoice;
@@ -45,7 +44,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     private final MyLogger logger = MyLogger.newBuilder() //
 	    .withNameOf(QazkomFacade.class) //
-	    .addWithPrefix("QAZKOM") //
+	    // .addWithPrefix("QAZKOM") //
 	    // .addWithCAPS() //
 	    .build();
 
@@ -54,8 +53,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Inject
     private QazkomOrderDAO qoDAO;
-    @Inject
-    private InvoiceDAO invoiceDAO;
+
     @Inject
     private QazkomPaymentDAO qpDAO;
 
@@ -179,7 +177,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Invoice handleResponse(final String responseXml) throws IllegalArgument, IllegalState {
+    public QazkomPayment processPayment(final String responseXml) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 
 	    MyObjects.requireNonNull(qazkomSettings, "qazkomSettings");
@@ -199,22 +197,16 @@ public class QazkomFacadeBean implements QazkomFacade {
 				"No QazkomOrder found or reference is invlaid - '%1$s'", qp.getOrderNumber()));
 		logger.INFO.log("QazkomOrder OK - '%1$s'", qo);
 
+		qo.paidBy(qp);
+		qoDAO.save(qo);
+
 		final Invoice i = qo.optionalForInvoice() //
 			.orElseThrow(illegalStateSupplierFormat("No Invoice attached - '%1$s'", qo));
 		logger.INFO.log("Invoice OK - '%1$s'", i);
 
-		i.paidBy(qp);
-		qo.paidBy(qp);
+		epayments.invoiceHasPaid(i, qpDAO.save(qp));
 
-		qpDAO.save(qp);
-		qoDAO.save(qo);
-		invoiceDAO.save(i);
-
-		logger.INFO.log("Ivoice has paid successfuly '%1$s'", i);
-
-		epayments.completeAfterPayment(i);
-
-		return i;
+		return qp;
 	    } catch (IllegalArgumentException | IllegalStateException e) {
 		logger.WARN.log(e, "Error processing response : %1$s", e.getMessage());
 		throw e;
