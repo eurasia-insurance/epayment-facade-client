@@ -239,7 +239,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 		    MyMaps.of(
 			    "Signed_Order_B64", MyStrings.requireNonEmpty(o.getOrderDoc().getBase64Xml(), "content"), //
 			    "template", qazkomSettings.QAZKOM_EPAY_TEMPLATE, //
-			    "email", forInvoice.getConsumerEmail(), //
+			    "email", forInvoice.optionalConsumerEmail().orElse(""), //
 			    "PostLink", postbackURI.toString(),
 			    "Language", forInvoice.getConsumerPreferLanguage().getTag(), //
 			    "appendix", o.getCartDoc().getBase64Xml(), //
