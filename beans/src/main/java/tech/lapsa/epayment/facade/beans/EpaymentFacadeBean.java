@@ -77,15 +77,19 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     public Invoice accept(final Invoice invoice) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    final Invoice saved = invoiceDAO.save(invoice);
-	    saved.unlazy();
-	    notifier.newNotificationBuilder() //
-		    .withChannel(NotificationChannel.EMAIL) //
-		    .withEvent(NotificationRequestStage.PAYMENT_LINK) //
-		    .withRecipient(NotificationRecipientType.REQUESTER) //
-		    .withProperty("paymentUrl", getDefaultPaymentURI(saved).toString()) //
-		    .forEntity(saved) //
-		    .build() //
-		    .send();
+
+	    if (invoice.optionalConsumerEmail().isPresent()) {
+		saved.unlazy();
+		notifier.newNotificationBuilder() //
+			.withChannel(NotificationChannel.EMAIL) //
+			.withEvent(NotificationRequestStage.PAYMENT_LINK) //
+			.withRecipient(NotificationRecipientType.REQUESTER) //
+			.withProperty("paymentUrl", getDefaultPaymentURI(saved).toString()) //
+			.forEntity(saved) //
+			.build() //
+			.onSuccess(x -> logger.FINE.log("Payment accepted notification sent '%1$s'", invoice)) //
+			.send();
+	    }
 	    return saved;
 	});
     }
@@ -138,18 +142,20 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	    logger.INFO.log("Ivoice has paid successfuly '%1$s'", invoice);
 
-	    invoice.unlazy();
-
-	    notifier.newNotificationBuilder() //
-		    .withChannel(NotificationChannel.EMAIL) //
-		    .withEvent(NotificationRequestStage.PAYMENT_SUCCESS) //
-		    .withRecipient(NotificationRecipientType.REQUESTER) //
-		    .forEntity(invoice) //
-		    .build() //
-		    .onSuccess(x -> logger.FINE.log("Payment successful notification sent '%1$s'", invoice)) //
-		    .send();
+	    if (invoice.optionalConsumerEmail().isPresent()) {
+		invoice.unlazy();
+		notifier.newNotificationBuilder() //
+			.withChannel(NotificationChannel.EMAIL) //
+			.withEvent(NotificationRequestStage.PAYMENT_SUCCESS) //
+			.withRecipient(NotificationRecipientType.REQUESTER) //
+			.forEntity(invoice) //
+			.build() //
+			.onSuccess(x -> logger.FINE.log("Payment successful notification sent '%1$s'", invoice)) //
+			.send();
+	    }
 
 	    try (Connection connection = connectionFactory.createConnection()) {
+		invoice.unlazy();
 		final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		final MessageProducer producer = session.createProducer(paidInvoicesDestination);
 		final Message msg = session.createObjectMessage(invoice);
