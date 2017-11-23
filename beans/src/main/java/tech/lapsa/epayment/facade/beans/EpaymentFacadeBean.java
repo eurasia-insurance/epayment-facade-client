@@ -12,13 +12,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
 
 import tech.lapsa.epayment.dao.InvoiceDAO;
 import tech.lapsa.epayment.dao.PaymentDAO;
@@ -36,6 +31,7 @@ import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 import tech.lapsa.java.commons.logging.MyLogger;
+import tech.lapsa.javax.jms.MyJMSClient;
 
 @Stateless
 public class EpaymentFacadeBean implements EpaymentFacade {
@@ -113,20 +109,18 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	});
     }
 
-    private static final String JNDI_JMS_CONNECTION_FACTORY = "epayment/jms/connectionFactory";
-
-    @Resource(name = JNDI_JMS_CONNECTION_FACTORY)
-    private ConnectionFactory connectionFactory;
-
     // TODO REFACT : rename JMS destination to epayment/jms/paidInvoices
-    public static final String JNDI_JMS_DEST_PAID_EBILLs = "epayment/jms/paidEbills";
+    public static final String JNDI_JMS_DEST_PAID_INVOICES = "epayment/jms/paidEbills";
 
-    @Resource(name = JNDI_JMS_DEST_PAID_EBILLs)
+    @Resource(name = JNDI_JMS_DEST_PAID_INVOICES)
     private Destination paidInvoicesDestination;
 
     private MyLogger logger = MyLogger.newBuilder() //
 	    .withNameOf(EpaymentFacade.class) //
 	    .build();
+
+    @Inject
+    private MyJMSClient jmsClient;
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -154,17 +148,17 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 			.send();
 	    }
 
-	    try (Connection connection = connectionFactory.createConnection()) {
-		invoice.unlazy();
-		final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		final MessageProducer producer = session.createProducer(paidInvoicesDestination);
-		final Message msg = session.createObjectMessage(invoice);
-		producer.send(msg);
+	    invoice.unlazy();
+	    try {
+		jmsClient.createConsumer(paidInvoicesDestination) //
+			.accept(invoice);
 		logger.FINE.log("Paid invoices notification queued '%1$s'", invoice);
-	    } catch (final JMSException e) {
+	    } catch (final JMSException | RuntimeException e) {
 		throw new EJBException("Failed to send invoice payment info", e);
 	    }
+
 	});
+
     }
 
 }
