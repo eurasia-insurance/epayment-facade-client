@@ -25,6 +25,7 @@
 		<javax-javaee-bom.version>7.0</javax-javaee-bom.version>
 		<java-commons.version>1.1-SNAPSHOT</java-commons.version>
 		<!-- tech -->
+		<javax-jms-commons.version>2.0-SNAPSHOT</javax-jms-commons.version>
 		<epayment-domain.version>4.0-SNAPSHOT</epayment-domain.version>
 		<epayment-dao.version>1.1-SNAPSHOT</epayment-dao.version>
 		<epayment-notifier.version>1.1-SNAPSHOT</epayment-notifier.version>
@@ -77,6 +78,11 @@
 				<type>ejb</type>
 			</dependency>
 			<!-- tech -->
+			<dependency>
+				<groupId>tech.lapsa.javax</groupId>
+				<artifactId>javax-jms-commons</artifactId>
+				<version>${javax-jms-commons.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>tech.lapsa.epayment</groupId>
 				<artifactId>epayment-domain</artifactId>
