@@ -13,7 +13,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 
 import tech.lapsa.epayment.dao.InvoiceDAO;
 import tech.lapsa.epayment.dao.PaymentDAO;
@@ -31,7 +30,7 @@ import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 import tech.lapsa.java.commons.logging.MyLogger;
-import tech.lapsa.javax.jms.MyJMSClient;
+import tech.lapsa.javax.jms.JmsClientFactory;
 
 @Stateless
 public class EpaymentFacadeBean implements EpaymentFacade {
@@ -120,7 +119,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    .build();
 
     @Inject
-    private MyJMSClient jmsClient;
+    private JmsClientFactory factory;
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -150,10 +149,10 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	    invoice.unlazy();
 	    try {
-		jmsClient.createConsumer(paidInvoicesDestination) //
+		factory.createConsumer(paidInvoicesDestination) //
 			.accept(invoice);
 		logger.FINE.log("Paid invoices notification queued '%1$s'", invoice);
-	    } catch (final JMSException | RuntimeException e) {
+	    } catch (final RuntimeException e) {
 		throw new EJBException("Failed to send invoice payment info", e);
 	    }
 
