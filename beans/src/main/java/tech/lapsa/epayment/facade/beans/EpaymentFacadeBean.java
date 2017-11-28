@@ -21,6 +21,7 @@ import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 import tech.lapsa.epayment.domain.Payment;
 import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.InvoiceNotFound;
+import tech.lapsa.epayment.notifier.Notification;
 import tech.lapsa.epayment.notifier.NotificationChannel;
 import tech.lapsa.epayment.notifier.NotificationRecipientType;
 import tech.lapsa.epayment.notifier.NotificationRequestStage;
@@ -72,18 +73,17 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     public Invoice accept(final Invoice invoice) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    final Invoice saved = invoiceDAO.save(invoice);
-
 	    if (invoice.optionalConsumerEmail().isPresent()) {
 		saved.unlazy();
-		notifier.newNotificationBuilder() //
+		notifier.send(Notification.builder() //
 			.withChannel(NotificationChannel.EMAIL) //
 			.withEvent(NotificationRequestStage.PAYMENT_LINK) //
 			.withRecipient(NotificationRecipientType.REQUESTER) //
 			.withProperty("paymentUrl", getDefaultPaymentURI(saved).toString()) //
 			.forEntity(saved) //
 			.build() //
-			.onSuccess(x -> logger.FINE.log("Payment accepted notification sent '%1$s'", invoice)) //
-			.send();
+		);
+		logger.FINE.log("Payment accepted notification sent '%1$s'", invoice);
 	    }
 	    return saved;
 	});
@@ -137,14 +137,13 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	    if (invoice.optionalConsumerEmail().isPresent()) {
 		invoice.unlazy();
-		notifier.newNotificationBuilder() //
+		notifier.send(Notification.builder() //
 			.withChannel(NotificationChannel.EMAIL) //
 			.withEvent(NotificationRequestStage.PAYMENT_SUCCESS) //
 			.withRecipient(NotificationRecipientType.REQUESTER) //
 			.forEntity(invoice) //
 			.build() //
-			.onSuccess(x -> logger.FINE.log("Payment successful notification sent '%1$s'", invoice)) //
-			.send();
+		);
 	    }
 
 	    invoice.unlazy();
