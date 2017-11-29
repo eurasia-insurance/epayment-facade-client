@@ -204,7 +204,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 			.orElseThrow(illegalStateSupplierFormat("No Invoice attached - '%1$s'", qo));
 		logger.INFO.log("Invoice OK - '%1$s'", i);
 
-		epayments.invoiceHasPaid(i, qpDAO.save(qp));
+		epayments.invoiceHasPaidBy(i, qpDAO.save(qp));
 
 		return qp;
 	    } catch (IllegalArgumentException | IllegalStateException e) {

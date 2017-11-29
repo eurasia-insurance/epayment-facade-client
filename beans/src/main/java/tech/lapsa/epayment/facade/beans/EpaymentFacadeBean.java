@@ -4,15 +4,15 @@ import static tech.lapsa.java.commons.function.MyExceptions.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
+import java.util.Currency;
 import java.util.Properties;
 
 import javax.annotation.Resource;
-import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.jms.Destination;
 
 import tech.lapsa.epayment.dao.InvoiceDAO;
 import tech.lapsa.epayment.dao.PaymentDAO;
@@ -26,12 +26,16 @@ import tech.lapsa.epayment.notifier.NotificationChannel;
 import tech.lapsa.epayment.notifier.NotificationRecipientType;
 import tech.lapsa.epayment.notifier.NotificationRequestStage;
 import tech.lapsa.epayment.notifier.Notifier;
+import tech.lapsa.epayment.shared.entity.XmlInvoiceHasPaidEvent;
+import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 import tech.lapsa.java.commons.logging.MyLogger;
-import tech.lapsa.javax.jms.JmsClientFactory;
+import tech.lapsa.javax.jms.JmsClientFactory.JmsSender;
+import tech.lapsa.javax.jms.JmsDestinationMappedName;
+import tech.lapsa.javax.jms.JmsServiceEntityType;
 
 @Stateless
 public class EpaymentFacadeBean implements EpaymentFacade {
@@ -108,22 +112,18 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	});
     }
 
-    // TODO REFACT : rename JMS destination to epayment/jms/paidInvoices
-    public static final String JNDI_JMS_DEST_PAID_INVOICES = "epayment/jms/paidEbills";
-
-    @Resource(name = JNDI_JMS_DEST_PAID_INVOICES)
-    private Destination paidInvoicesDestination;
-
     private MyLogger logger = MyLogger.newBuilder() //
 	    .withNameOf(EpaymentFacade.class) //
 	    .build();
 
     @Inject
-    private JmsClientFactory factory;
+    @JmsDestinationMappedName(EpaymentDestinations.INVOICE_HAS_PAID)
+    @JmsServiceEntityType(XmlInvoiceHasPaidEvent.class)
+    private JmsSender<XmlInvoiceHasPaidEvent> invoiceHasPaidEventNotificator;
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void invoiceHasPaid(final Invoice invoice, final Payment payment) throws IllegalArgument, IllegalState {
+    public void invoiceHasPaidBy(final Invoice invoice, final Payment payment) throws IllegalArgument, IllegalState {
 	reThrowAsChecked(() -> {
 
 	    MyObjects.requireNonNull(invoice, "invoice");
@@ -146,13 +146,25 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		);
 	    }
 
-	    invoice.unlazy();
-	    try {
-		factory.createConsumer(paidInvoicesDestination) //
-			.accept(invoice);
-		logger.FINE.log("Paid invoices notification queued '%1$s'", invoice);
-	    } catch (final RuntimeException e) {
-		throw new EJBException("Failed to send invoice payment info", e);
+	    {
+		final String methodName = payment.getMethod().regular();
+		final Instant paid = payment.getCreated();
+		final Double amount = payment.getAmount();
+		final Currency currency = payment.getCurrency();
+		final String ref = payment.getReferenceNumber();
+		final String invoiceNumber = invoice.getNumber();
+		final String externalId = invoice.getExternalId();
+
+		XmlInvoiceHasPaidEvent ev = new XmlInvoiceHasPaidEvent();
+		ev.setAmount(amount);
+		ev.setCurrency(currency);
+		ev.setInstant(paid);
+		ev.setInvoiceNumber(invoiceNumber);
+		ev.setMethod(methodName);
+		ev.setReferenceNumber(ref);
+		ev.setExternalId(externalId);
+
+		invoiceHasPaidEventNotificator.send(ev);
 	    }
 
 	});

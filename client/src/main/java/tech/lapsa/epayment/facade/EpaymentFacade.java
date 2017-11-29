@@ -36,5 +36,5 @@ public interface EpaymentFacade {
 		.isPresent();
     }
 
-    void invoiceHasPaid(Invoice invoice, Payment payment) throws IllegalArgument, IllegalState;
+    void invoiceHasPaidBy(Invoice invoice, Payment payment) throws IllegalArgument, IllegalState;
 }
