@@ -11,14 +11,14 @@ import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.shared.entity.XmlInvoiceAcceptRequest;
-import tech.lapsa.epayment.shared.entity.XmlInvoiceAcceptResponce;
+import tech.lapsa.epayment.shared.entity.XmlInvoiceAcceptResponse;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
 import tech.lapsa.java.commons.function.MyStreams;
 import tech.lapsa.javax.jms.CallableServiceDrivenBean;
 
 @MessageDriven(mappedName = EpaymentDestinations.ACCEPT_INVOICE)
 public class InvoiceAcceptorDrivenBean
-	extends CallableServiceDrivenBean<XmlInvoiceAcceptRequest, XmlInvoiceAcceptResponce> {
+	extends CallableServiceDrivenBean<XmlInvoiceAcceptRequest, XmlInvoiceAcceptResponse> {
 
     public InvoiceAcceptorDrivenBean() {
 	super(XmlInvoiceAcceptRequest.class);
@@ -28,7 +28,7 @@ public class InvoiceAcceptorDrivenBean
     private EpaymentFacade epayments;
 
     @Override
-    public XmlInvoiceAcceptResponce calling(XmlInvoiceAcceptRequest entity, Properties properties) {
+    public XmlInvoiceAcceptResponse calling(XmlInvoiceAcceptRequest entity, Properties properties) {
 	final InvoiceBuilder builder = Invoice.builder() //
 		.withGeneratedNumber() //
 		.withConsumerName(entity.getName()) //
@@ -46,7 +46,7 @@ public class InvoiceAcceptorDrivenBean
 	final String invoiceNumber = reThrowAsUnchecked(() -> epayments.completeAndAccept(builder) //
 		.getNumber());
 
-	return new XmlInvoiceAcceptResponce(invoiceNumber);
+	return new XmlInvoiceAcceptResponse(invoiceNumber);
     }
 
 }
