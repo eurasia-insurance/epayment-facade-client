@@ -35,6 +35,12 @@
 			<optional>false</optional>
 		</dependency>
 		<dependency>
+			<groupId>tech.lapsa.payara</groupId>
+			<artifactId>payara-hibernate-validation</artifactId>
+			<scope>runtime</scope>
+			<optional>false</optional>
+		</dependency>
+		<dependency>
 			<groupId>tech.lapsa.epayment</groupId>
 			<artifactId>epayment-domain</artifactId>
 			<scope>compile</scope>

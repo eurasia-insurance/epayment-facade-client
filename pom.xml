@@ -26,6 +26,7 @@
 		<java-commons.version>1.1-SNAPSHOT</java-commons.version>
 		<!-- tech -->
 		<javax-jms-commons.version>2.0-SNAPSHOT</javax-jms-commons.version>
+		<payara-hibernate-validation.version>1.0</payara-hibernate-validation.version>
 		<epayment-shared.version>1.0-SNAPSHOT</epayment-shared.version>
 		<epayment-domain.version>4.0-SNAPSHOT</epayment-domain.version>
 		<epayment-dao.version>1.1-SNAPSHOT</epayment-dao.version>
@@ -83,6 +84,11 @@
 				<groupId>tech.lapsa.javax</groupId>
 				<artifactId>javax-jms-commons</artifactId>
 				<version>${javax-jms-commons.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>tech.lapsa.payara</groupId>
+				<artifactId>payara-hibernate-validation</artifactId>
+				<version>${payara-hibernate-validation.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>tech.lapsa.epayment</groupId>
