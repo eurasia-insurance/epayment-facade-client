@@ -194,10 +194,10 @@ public class QazkomFacadeBean implements QazkomFacade {
 			    .fromRawXml(responseXml) //
 			    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
 			    .build();
-		    qp = qpDAO.save(qpp);
 		    if (!qpDAO.isUniqueNumber(qpp.getOrderNumber()))
 			throw MyExceptions.illegalStateFormat("Already processed QazkomPayment with order number %1$s",
 				qpp.getOrderNumber());
+		    qp = qpDAO.save(qpp);
 		}
 
 		logger.INFO.log("QazkomPayment OK - '%1$s'", qp);
