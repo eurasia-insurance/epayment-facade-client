@@ -14,11 +14,11 @@ import tech.lapsa.epayment.shared.entity.XmlInvoiceAcceptRequest;
 import tech.lapsa.epayment.shared.entity.XmlInvoiceAcceptResponse;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
 import tech.lapsa.java.commons.function.MyStreams;
-import tech.lapsa.javax.jms.CallableServiceDrivenBean;
+import tech.lapsa.javax.jms.service.JmsCallableServiceDrivenBean;
 
 @MessageDriven(mappedName = EpaymentDestinations.ACCEPT_INVOICE)
 public class InvoiceAcceptorDrivenBean
-	extends CallableServiceDrivenBean<XmlInvoiceAcceptRequest, XmlInvoiceAcceptResponse> {
+	extends JmsCallableServiceDrivenBean<XmlInvoiceAcceptRequest, XmlInvoiceAcceptResponse> {
 
     public InvoiceAcceptorDrivenBean() {
 	super(XmlInvoiceAcceptRequest.class);

@@ -33,9 +33,8 @@ import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 import tech.lapsa.java.commons.logging.MyLogger;
-import tech.lapsa.javax.jms.JmsClientFactory.JmsEventNotificator;
-import tech.lapsa.javax.jms.JmsDestinationMappedName;
-import tech.lapsa.javax.jms.JmsServiceEntityType;
+import tech.lapsa.javax.jms.client.JmsDestination;
+import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
 
 @Stateless
 public class EpaymentFacadeBean implements EpaymentFacade {
@@ -117,9 +116,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    .build();
 
     @Inject
-    @JmsDestinationMappedName(EpaymentDestinations.INVOICE_HAS_PAID)
-    @JmsServiceEntityType(XmlInvoiceHasPaidEvent.class)
-    private JmsEventNotificator<XmlInvoiceHasPaidEvent> invoiceHasPaidEventNotificator;
+    @JmsDestination(EpaymentDestinations.INVOICE_HAS_PAID)
+    private JmsEventNotificatorClient<XmlInvoiceHasPaidEvent> invoiceHasPaidEventNotificatorClient;
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -164,7 +162,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		ev.setReferenceNumber(ref);
 		ev.setExternalId(externalId);
 
-		invoiceHasPaidEventNotificator.eventNotify(ev);
+		invoiceHasPaidEventNotificatorClient.eventNotify(ev);
 	    }
 
 	});

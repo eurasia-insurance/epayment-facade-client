@@ -6,6 +6,8 @@ import java.net.URI;
 import java.util.Properties;
 
 import javax.ejb.MessageDriven;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import tech.lapsa.epayment.domain.Invoice;
@@ -14,11 +16,12 @@ import tech.lapsa.epayment.facade.InvoiceNotFound;
 import tech.lapsa.epayment.shared.entity.XmlPaymentURISpecifierRequest;
 import tech.lapsa.epayment.shared.entity.XmlPaymentURISpecifierResponse;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
-import tech.lapsa.javax.jms.CallableServiceDrivenBean;
+import tech.lapsa.javax.jms.service.JmsCallableServiceDrivenBean;
 
 @MessageDriven(mappedName = EpaymentDestinations.SPECIFY_PAYMENT_URI)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class PaymentURISpecifierDrivenBean
-	extends CallableServiceDrivenBean<XmlPaymentURISpecifierRequest, XmlPaymentURISpecifierResponse> {
+	extends JmsCallableServiceDrivenBean<XmlPaymentURISpecifierRequest, XmlPaymentURISpecifierResponse> {
 
     public PaymentURISpecifierDrivenBean() {
 	super(XmlPaymentURISpecifierRequest.class);
