@@ -190,14 +190,14 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		final QazkomPayment qp;
 		{
-		    final QazkomPayment qpp = QazkomPayment.builder() //
+		    final QazkomPayment temp = QazkomPayment.builder() //
 			    .fromRawXml(responseXml) //
 			    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
 			    .build();
-		    if (!qpDAO.isUniqueNumber(qpp.getOrderNumber()))
+		    if (!qpDAO.isUniqueNumber(temp.getOrderNumber()))
 			throw MyExceptions.illegalStateFormat("Already processed QazkomPayment with order number %1$s",
-				qpp.getOrderNumber());
-		    qp = qpDAO.save(qpp);
+				temp.getOrderNumber());
+		    qp = qpDAO.save(temp);
 		}
 
 		logger.INFO.log("QazkomPayment OK - '%1$s'", qp);
