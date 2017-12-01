@@ -27,6 +27,7 @@ import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.PaymentMethod;
 import tech.lapsa.epayment.facade.PaymentMethod.Http;
 import tech.lapsa.epayment.facade.QazkomFacade;
+import tech.lapsa.java.commons.function.MyExceptions;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyMaps;
@@ -186,10 +187,19 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    logger.INFO.log("New response '%1$s'", responseXml);
 
 	    try {
-		final QazkomPayment qp = qpDAO.save(QazkomPayment.builder() //
-			.fromRawXml(responseXml) //
-			.withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
-			.build());
+
+		final QazkomPayment qp;
+		{
+		    final QazkomPayment temp = QazkomPayment.builder() //
+			    .fromRawXml(responseXml) //
+			    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
+			    .build();
+		    if (!qpDAO.isUniqueNumber(temp.getOrderNumber()))
+			throw MyExceptions.illegalStateFormat("Already processed QazkomPayment with order number %1$s",
+				temp.getOrderNumber());
+		    qp = qpDAO.save(temp);
+		}
+
 		logger.INFO.log("QazkomPayment OK - '%1$s'", qp);
 
 		final QazkomOrder qo = qoDAO.optionalByNumber(qp.getOrderNumber()) //
