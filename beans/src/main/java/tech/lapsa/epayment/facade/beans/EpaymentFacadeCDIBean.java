@@ -8,14 +8,14 @@ import javax.enterprise.context.Dependent;
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 import tech.lapsa.epayment.domain.Payment;
-import tech.lapsa.epayment.facade.CDItoEJBDelegate;
 import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.InvoiceNotFound;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
+import tech.lapsa.javax.cdi.qualifiers.QDelegateToEJB;
 
 @Dependent
-@CDItoEJBDelegate
+@QDelegateToEJB
 public class EpaymentFacadeCDIBean implements EpaymentFacade {
 
     @EJB
