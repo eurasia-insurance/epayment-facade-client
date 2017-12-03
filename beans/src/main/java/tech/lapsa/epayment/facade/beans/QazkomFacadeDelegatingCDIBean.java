@@ -16,7 +16,7 @@ import tech.lapsa.javax.cdi.qualifiers.QDelegateToEJB;
 
 @Dependent
 @QDelegateToEJB
-public class QazkomFacadeCDIBean implements QazkomFacade {
+public class QazkomFacadeDelegatingCDIBean implements QazkomFacade {
 
     @EJB
     private QazkomFacade delegate;

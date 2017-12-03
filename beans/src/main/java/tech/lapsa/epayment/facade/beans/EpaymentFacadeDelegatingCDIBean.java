@@ -16,7 +16,7 @@ import tech.lapsa.javax.cdi.qualifiers.QDelegateToEJB;
 
 @Dependent
 @QDelegateToEJB
-public class EpaymentFacadeCDIBean implements EpaymentFacade {
+public class EpaymentFacadeDelegatingCDIBean implements EpaymentFacade {
 
     @EJB
     private EpaymentFacade delegate;
