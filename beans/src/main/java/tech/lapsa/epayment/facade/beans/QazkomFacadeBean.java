@@ -18,9 +18,11 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
+import tech.lapsa.epayment.dao.QazkomErrorDAO;
 import tech.lapsa.epayment.dao.QazkomOrderDAO;
 import tech.lapsa.epayment.dao.QazkomPaymentDAO;
 import tech.lapsa.epayment.domain.Invoice;
+import tech.lapsa.epayment.domain.QazkomError;
 import tech.lapsa.epayment.domain.QazkomOrder;
 import tech.lapsa.epayment.domain.QazkomPayment;
 import tech.lapsa.epayment.facade.EpaymentFacade;
@@ -57,6 +59,9 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Inject
     private QazkomPaymentDAO qpDAO;
+
+    @Inject
+    private QazkomErrorDAO qeDAO;
 
     private QazkomSettings qazkomSettings;
 
@@ -178,20 +183,56 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public QazkomPayment processPayment(final String responseXml) throws IllegalArgument, IllegalState {
+    public QazkomError processFailure(final String failureXml) throws IllegalArgument, IllegalState {
+	return reThrowAsChecked(() -> {
+
+	    MyStrings.requireNonEmpty(failureXml, "failureXml");
+
+	    logger.INFO.log("New failure '%1$s'", failureXml);
+
+	    try {
+
+		final QazkomError qe;
+		{
+		    final QazkomError temp = QazkomError.builder() //
+			    .fromRawXml(failureXml) //
+			    .build();
+		    qe = qeDAO.save(temp);
+		}
+
+		final QazkomOrder qo = qoDAO.optionalByNumber(qe.getOrderNumber()) //
+			.orElseThrow(illegalArgumentSupplierFormat(
+				"No QazkomOrder found or reference is invlaid - '%1$s'", qe.getOrderNumber()));
+		logger.INFO.log("QazkomOrder OK - '%1$s'", qo);
+
+		qo.attachError(qe);
+		qoDAO.save(qo);
+		qeDAO.save(qe);
+
+		return qe;
+	    } catch (IllegalArgumentException | IllegalStateException e) {
+		logger.WARN.log(e, "Error processing failure : %1$s", e.getMessage());
+		throw e;
+	    }
+	});
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public QazkomPayment processPostback(final String postbackXml) throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 
 	    MyObjects.requireNonNull(qazkomSettings, "qazkomSettings");
-	    MyStrings.requireNonEmpty(responseXml, "responseXml");
+	    MyStrings.requireNonEmpty(postbackXml, "postbackXml");
 
-	    logger.INFO.log("New response '%1$s'", responseXml);
+	    logger.INFO.log("New postback '%1$s'", postbackXml);
 
 	    try {
 
 		final QazkomPayment qp;
 		{
 		    final QazkomPayment temp = QazkomPayment.builder() //
-			    .fromRawXml(responseXml) //
+			    .fromRawXml(postbackXml) //
 			    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
 			    .build();
 		    if (!qpDAO.isUniqueNumber(temp.getOrderNumber()))
@@ -218,19 +259,20 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		return qp;
 	    } catch (IllegalArgumentException | IllegalStateException e) {
-		logger.WARN.log(e, "Error processing response : %1$s", e.getMessage());
+		logger.WARN.log(e, "Error processing postback : %1$s", e.getMessage());
 		throw e;
 	    }
 	});
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public PaymentMethod httpMethod(URI postbackURI, URI returnUri, Invoice forInvoice)
+    public PaymentMethod httpMethod(final URI postbackURI, final URI failureURI, final URI returnURI,
+	    final Invoice forInvoice)
 	    throws IllegalArgument, IllegalState {
 	return reThrowAsChecked(() -> {
 	    MyObjects.requireNonNull(postbackURI, "postbackURI");
-	    MyObjects.requireNonNull(returnUri, "returnUri");
+	    MyObjects.requireNonNull(failureURI, "failureURI");
+	    MyObjects.requireNonNull(returnURI, "returnURI");
 	    MyObjects.requireNonNull(forInvoice, "forInvoice");
 
 	    QazkomOrder o = qoDAO.optionalLatestForInvoice(forInvoice) //
@@ -250,10 +292,11 @@ public class QazkomFacadeBean implements QazkomFacade {
 			    "Signed_Order_B64", MyStrings.requireNonEmpty(o.getOrderDoc().getBase64Xml(), "content"), //
 			    "template", qazkomSettings.QAZKOM_EPAY_TEMPLATE, //
 			    "email", forInvoice.optionalConsumerEmail().orElse(""), //
-			    "PostLink", postbackURI.toString(),
+			    "PostLink", postbackURI.toASCIIString(),
+			    "FailurePostLink", failureURI.toASCIIString(),
 			    "Language", forInvoice.getConsumerPreferLanguage().getTag(), //
 			    "appendix", o.getCartDoc().getBase64Xml(), //
-			    "BackLink", returnUri.toString() //
+			    "BackLink", returnURI.toString() //
 	    ));
 	    return new QazkomPaymentMethod(http);
 	});
