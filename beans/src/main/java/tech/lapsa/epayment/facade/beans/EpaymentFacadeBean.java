@@ -111,7 +111,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	});
     }
 
-    private MyLogger logger = MyLogger.newBuilder() //
+    private final MyLogger logger = MyLogger.newBuilder() //
 	    .withNameOf(EpaymentFacade.class) //
 	    .build();
 
@@ -153,7 +153,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		final String invoiceNumber = invoice.getNumber();
 		final String externalId = invoice.getExternalId();
 
-		XmlInvoiceHasPaidEvent ev = new XmlInvoiceHasPaidEvent();
+		final XmlInvoiceHasPaidEvent ev = new XmlInvoiceHasPaidEvent();
 		ev.setAmount(amount);
 		ev.setCurrency(currency);
 		ev.setInstant(paid);
