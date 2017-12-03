@@ -79,12 +79,12 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 	final X509Certificate QAZKOM_BANK_CERTIFICATE;
 
-	private QazkomSettings(Properties qazkomConfig) {
+	private QazkomSettings(final Properties qazkomConfig) {
 
 	    try {
 		QAZKOM_EPAY_URI = new URI(qazkomConfig.getProperty(QazkomConstants.PROPERTY_BANK_EPAY_URL));
 		MyObjects.requireNonNull(QAZKOM_EPAY_URI, "QAZKOM_EPAY_URI");
-	    } catch (URISyntaxException e) {
+	    } catch (final URISyntaxException e) {
 		throw new RuntimeException("Qazkom Epay URI process failed", e);
 	    }
 
@@ -135,7 +135,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		    QAZKOM_MERCHANT_CERTIFICATE = MyCertificates.from(KEYSTORE, MERCHANT_ALIAS) //
 			    .orElseThrow(() -> new RuntimeException("Can find key entry"));
-		} catch (IOException e) {
+		} catch (final IOException e) {
 		    throw new RuntimeException(e);
 		}
 	    }
@@ -166,7 +166,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
 		    QAZKOM_BANK_CERTIFICATE = MyCertificates.from(KEYSTORE, BANK_ALIAS) //
 			    .orElseThrow(() -> new RuntimeException("Can find cert entry"));
-		} catch (IOException e) {
+		} catch (final IOException e) {
 		    throw new RuntimeException(e);
 		}
 	    }
@@ -175,7 +175,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 
     @PostConstruct
     public void init() {
-	this.qazkomSettings = new QazkomSettings(qazkomConfig);
+	qazkomSettings = new QazkomSettings(qazkomConfig);
     }
 
     @Inject
@@ -275,7 +275,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 	    MyObjects.requireNonNull(returnURI, "returnURI");
 	    MyObjects.requireNonNull(forInvoice, "forInvoice");
 
-	    QazkomOrder o = qoDAO.optionalLatestForInvoice(forInvoice) //
+	    final QazkomOrder o = qoDAO.optionalLatestForInvoice(forInvoice) //
 		    .orElseGet(() -> {
 			return qoDAO.save(QazkomOrder.builder() //
 				.forInvoice(forInvoice) //
@@ -287,7 +287,7 @@ public class QazkomFacadeBean implements QazkomFacade {
 				.build());
 		    });
 
-	    Http http = new Http(qazkomSettings.QAZKOM_EPAY_URI, qazkomSettings.QAZKOM_EPAY_HTTP_METHOD,
+	    final Http http = new Http(qazkomSettings.QAZKOM_EPAY_URI, qazkomSettings.QAZKOM_EPAY_HTTP_METHOD,
 		    MyMaps.of(
 			    "Signed_Order_B64", MyStrings.requireNonEmpty(o.getOrderDoc().getBase64Xml(), "content"), //
 			    "template", qazkomSettings.QAZKOM_EPAY_TEMPLATE, //
