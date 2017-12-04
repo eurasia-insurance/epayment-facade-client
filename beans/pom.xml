@@ -31,12 +31,6 @@
 		</dependency>
 		<dependency>
 			<groupId>tech.lapsa.javax</groupId>
-			<artifactId>javax-cdi-commons</artifactId>
-			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
-			<groupId>tech.lapsa.javax</groupId>
 			<artifactId>javax-jms-rpc</artifactId>
 			<type>ejb</type>
 			<scope>compile</scope>
