@@ -2,8 +2,9 @@ package tech.lapsa.epayment.facade.beans;
 
 import java.net.URI;
 
-import javax.ejb.EJB;
 import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.QazkomError;
@@ -18,23 +19,22 @@ import tech.lapsa.javax.cdi.qualifiers.QDelegateToEJB;
 @QDelegateToEJB
 public class QazkomFacadeDelegatingCDIBean implements QazkomFacade {
 
-    @EJB
-    private QazkomFacade delegate;
+    @Inject
+    private Provider<QazkomFacade> delegateProvider;
 
     @Override
     public QazkomPayment processPostback(final String postbackXml) throws IllegalArgument, IllegalState {
-	return delegate.processPostback(postbackXml);
+	return delegateProvider.get().processPostback(postbackXml);
     }
 
     @Override
     public QazkomError processFailure(final String failureXml) throws IllegalArgument, IllegalState {
-	return delegate.processFailure(failureXml);
+	return delegateProvider.get().processFailure(failureXml);
     }
 
     @Override
     public PaymentMethod httpMethod(final URI postbackURI, final URI failureURI, final URI returnURI,
-	    final Invoice forInvoice)
-	    throws IllegalArgument, IllegalState {
-	return delegate.httpMethod(postbackURI, failureURI, returnURI, forInvoice);
+	    final Invoice forInvoice) throws IllegalArgument, IllegalState {
+	return delegateProvider.get().httpMethod(postbackURI, failureURI, returnURI, forInvoice);
     }
 }

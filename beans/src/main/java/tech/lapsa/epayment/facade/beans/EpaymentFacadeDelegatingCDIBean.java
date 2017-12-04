@@ -2,8 +2,9 @@ package tech.lapsa.epayment.facade.beans;
 
 import java.net.URI;
 
-import javax.ejb.EJB;
 import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
@@ -18,31 +19,31 @@ import tech.lapsa.javax.cdi.qualifiers.QDelegateToEJB;
 @QDelegateToEJB
 public class EpaymentFacadeDelegatingCDIBean implements EpaymentFacade {
 
-    @EJB
-    private EpaymentFacade delegate;
+    @Inject
+    private Provider<EpaymentFacade> delegateProvider;
 
     @Override
     public URI getDefaultPaymentURI(final Invoice invoice) throws IllegalArgument, IllegalState {
-	return delegate.getDefaultPaymentURI(invoice);
+	return delegateProvider.get().getDefaultPaymentURI(invoice);
     }
 
     @Override
     public Invoice accept(final Invoice invoice) throws IllegalArgument, IllegalState {
-	return delegate.accept(invoice);
+	return delegateProvider.get().accept(invoice);
     }
 
     @Override
     public Invoice completeAndAccept(final InvoiceBuilder invoiceBuilder) throws IllegalArgument, IllegalState {
-	return delegate.completeAndAccept(invoiceBuilder);
+	return delegateProvider.get().completeAndAccept(invoiceBuilder);
     }
 
     @Override
     public Invoice invoiceByNumber(final String number) throws IllegalArgument, IllegalState, InvoiceNotFound {
-	return delegate.invoiceByNumber(number);
+	return delegateProvider.get().invoiceByNumber(number);
     }
 
     @Override
     public void invoiceHasPaidBy(final Invoice invoice, final Payment payment) throws IllegalArgument, IllegalState {
-	delegate.invoiceHasPaidBy(invoice, payment);
+	delegateProvider.get().invoiceHasPaidBy(invoice, payment);
     }
 }
