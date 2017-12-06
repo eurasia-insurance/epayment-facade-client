@@ -1,40 +1,39 @@
 package tech.lapsa.epayment.facade;
 
 import java.net.URI;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.Currency;
 
 import javax.ejb.Local;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
-import tech.lapsa.epayment.domain.Payment;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
-import tech.lapsa.java.commons.function.MyOptionals;
 
 @Local
 public interface EpaymentFacade {
 
-    URI getDefaultPaymentURI(Invoice invoice) throws IllegalArgument, IllegalState;
+    URI getDefaultPaymentURI(String invoiceNumber) throws IllegalArgument, IllegalState;
 
-    Invoice accept(Invoice invoice) throws IllegalArgument, IllegalState;
+    String invoiceAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgument, IllegalState;
 
-    Invoice completeAndAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgument, IllegalState;
+    Invoice getInvoiceByNumber(String invoiceNumber) throws IllegalArgument, IllegalState;
 
-    Invoice invoiceByNumber(String number) throws IllegalArgument, IllegalState, InvoiceNotFound;
+    boolean hasInvoiceWithNumber(String invoiceNumber) throws IllegalArgument, IllegalState;
 
-    default Optional<Invoice> optionalByNumber(String number) throws IllegalArgument, IllegalState {
-	try {
-	    return MyOptionals.of(invoiceByNumber(number));
-	} catch (InvoiceNotFound e) {
-	    return Optional.empty();
-	}
-    }
+    // qazkom type
 
-    default boolean hasInvoiceWithNumber(String number) throws IllegalArgument, IllegalState {
-	return optionalByNumber(number) //
-		.isPresent();
-    }
+    String processQazkomFailure(String failureXml) throws IllegalArgument, IllegalState;
 
-    void invoiceHasPaidBy(Invoice invoice, Payment payment) throws IllegalArgument, IllegalState;
+    PaymentMethod qazkomHttpMethod(URI postbackURI, URI failureURI, URI returnURI, Invoice forInvoice)
+	    throws IllegalArgument, IllegalState;
+
+    void completeWithQazkomPayment(String postbackXml) throws IllegalArgument, IllegalState;
+
+    // unknown type
+
+    void completeWithUnknownPayment(String invoiceNumber, Double paidAmount, Currency paidCurency, Instant paidInstant,
+	    String paidReference) throws IllegalArgument, IllegalState;
+
 }
