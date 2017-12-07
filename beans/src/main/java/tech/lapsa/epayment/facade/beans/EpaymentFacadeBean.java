@@ -28,13 +28,13 @@ import tech.lapsa.epayment.domain.QazkomOrder;
 import tech.lapsa.epayment.domain.QazkomPayment;
 import tech.lapsa.epayment.domain.UnknownPayment;
 import tech.lapsa.epayment.facade.EpaymentFacade;
+import tech.lapsa.epayment.facade.NotificationFacade;
+import tech.lapsa.epayment.facade.NotificationFacade.Notification;
+import tech.lapsa.epayment.facade.NotificationFacade.Notification.NotificationChannel;
+import tech.lapsa.epayment.facade.NotificationFacade.Notification.NotificationEventType;
+import tech.lapsa.epayment.facade.NotificationFacade.Notification.NotificationRecipientType;
 import tech.lapsa.epayment.facade.PaymentMethod;
 import tech.lapsa.epayment.facade.PaymentMethod.Http;
-import tech.lapsa.epayment.notifier.Notification;
-import tech.lapsa.epayment.notifier.NotificationChannel;
-import tech.lapsa.epayment.notifier.NotificationRecipientType;
-import tech.lapsa.epayment.notifier.NotificationRequestStage;
-import tech.lapsa.epayment.notifier.Notifier;
 import tech.lapsa.epayment.shared.entity.XmlInvoiceHasPaidEvent;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
 import tech.lapsa.java.commons.function.MyExceptions;
@@ -132,7 +132,7 @@ public class EpaymentFacadeBean implements EpaymentFacade {
     private PaymentDAO paymentDAO;
 
     @Inject
-    private Notifier notifier;
+    private NotificationFacade notifications;
 
     @Resource(lookup = JNDI_CONFIG)
     private Properties epaymentConfig;
@@ -183,13 +183,17 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		.build());
 	if (saved.optionalConsumerEmail().isPresent()) {
 	    saved.unlazy();
-	    notifier.send(Notification.builder() //
+	    reThrowAsUnchecked(() ->
+	    //
+	    notifications.send(Notification.builder() //
 		    .withChannel(NotificationChannel.EMAIL) //
-		    .withEvent(NotificationRequestStage.PAYMENT_LINK) //
+		    .withEvent(NotificationEventType.PAYMENT_LINK) //
 		    .withRecipient(NotificationRecipientType.REQUESTER) //
 		    .withProperty("paymentUrl", _getDefaultPaymentURI(saved.getNumber()).toString()) //
 		    .forEntity(saved) //
 		    .build() //
+	    )
+	    //
 	    );
 	    logger.FINE.log("Payment accepted notification sent '%1$s'", saved);
 	}
@@ -342,12 +346,16 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	if (invoice.optionalConsumerEmail().isPresent()) {
 	    invoice.unlazy();
-	    notifier.send(Notification.builder() //
+	    reThrowAsUnchecked(() ->
+	    //
+	    notifications.send(Notification.builder() //
 		    .withChannel(NotificationChannel.EMAIL) //
-		    .withEvent(NotificationRequestStage.PAYMENT_SUCCESS) //
+		    .withEvent(NotificationEventType.PAYMENT_SUCCESS) //
 		    .withRecipient(NotificationRecipientType.REQUESTER) //
 		    .forEntity(invoice) //
 		    .build() //
+	    )
+	    //
 	    );
 	}
 
