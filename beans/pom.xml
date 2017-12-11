@@ -60,6 +60,12 @@
 			<scope>compile</scope>
 			<optional>false</optional>
 		</dependency>
+		<!-- Payara -->
+		<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>org.eclipse.persistence.core</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<!-- JavaEE -->
 		<dependency>
 			<groupId>javax.enterprise</groupId>
