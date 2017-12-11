@@ -10,16 +10,17 @@ import java.util.Properties;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
-import tech.lapsa.epayment.dao.InvoiceDAO;
-import tech.lapsa.epayment.dao.PaymentDAO;
-import tech.lapsa.epayment.dao.QazkomErrorDAO;
-import tech.lapsa.epayment.dao.QazkomOrderDAO;
-import tech.lapsa.epayment.dao.QazkomPaymentDAO;
+import tech.lapsa.epayment.dao.InvoiceDAO.InvoiceDAORemote;
+import tech.lapsa.epayment.dao.PaymentDAO.PaymentDAORemote;
+import tech.lapsa.epayment.dao.QazkomErrorDAO.QazkomErrorDAORemote;
+import tech.lapsa.epayment.dao.QazkomOrderDAO.QazkomOrderDAORemote;
+import tech.lapsa.epayment.dao.QazkomPaymentDAO.QazkomPaymentDAORemote;
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 import tech.lapsa.epayment.domain.Payment;
@@ -47,6 +48,7 @@ import tech.lapsa.java.commons.function.MyStrings;
 import tech.lapsa.java.commons.logging.MyLogger;
 import tech.lapsa.javax.jms.client.JmsDestination;
 import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
+import tech.lapsa.patterns.dao.NotFound;
 
 @Stateless
 public class EpaymentFacadeBean implements EpaymentFacade {
@@ -125,26 +127,26 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    .withNameOf(EpaymentFacade.class) //
 	    .build();
 
-    @Inject
-    private InvoiceDAO invoiceDAO;
+    @EJB
+    private InvoiceDAORemote invoiceDAO;
 
-    @Inject
-    private PaymentDAO paymentDAO;
+    @EJB
+    private PaymentDAORemote paymentDAO;
+
+    @EJB
+    private QazkomOrderDAORemote qoDAO;
+
+    @EJB
+    private QazkomPaymentDAORemote qpDAO;
+
+    @EJB
+    private QazkomErrorDAORemote qeDAO;
 
     @Inject
     private NotificationFacade notifications;
 
     @Resource(lookup = JNDI_CONFIG)
     private Properties epaymentConfig;
-
-    @Inject
-    private QazkomOrderDAO qoDAO;
-
-    @Inject
-    private QazkomPaymentDAO qpDAO;
-
-    @Inject
-    private QazkomErrorDAO qeDAO;
 
     private boolean _hasInvoiceWithNumber(final String invoiceNumber) {
 	try {
@@ -157,9 +159,12 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     private Invoice _invoiceByNumber(final String invoiceNumber) {
 	MyStrings.requireNonEmpty(invoiceNumber, "invoiceNumber");
-	return invoiceDAO.optionalByNumber(invoiceNumber) //
-		.orElseThrow(MyExceptions.supplier(InvoiceNotFound::new, "Invoice not found with number %1$s",
-			invoiceNumber));
+	try {
+	    final Invoice i = invoiceDAO.getByNumber(invoiceNumber);
+	    return i;
+	} catch (NotFound e) {
+	    throw MyExceptions.format(InvoiceNotFound::new, "Invoice not found with number %1$s", invoiceNumber);
+	}
     }
 
     private URI _getDefaultPaymentURI(String invoiceNumber) {
@@ -238,7 +243,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
 	    logger.INFO.log("QazkomPayment OK - '%1$s'", qp);
 
-	    final QazkomOrder qo = qoDAO.optionalByNumber(qp.getOrderNumber()) //
+	    final QazkomOrder qo = MyOptionals
+		    .ifCheckedException(() -> qoDAO.getByNumber(qp.getOrderNumber()), NotFound.class) //
 		    .orElseThrow(illegalArgumentSupplierFormat(
 			    "No QazkomOrder found or reference is invlaid - '%1$s'", qp.getOrderNumber()));
 	    logger.INFO.log("QazkomOrder OK - '%1$s'", qo);
@@ -265,7 +271,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	MyObjects.requireNonNull(returnURI, "returnURI");
 	MyObjects.requireNonNull(forInvoice, "forInvoice");
 
-	final QazkomOrder o = qoDAO.optionalLatestForInvoice(forInvoice) //
+	final QazkomOrder o = MyOptionals //
+		.ifCheckedException(() -> qoDAO.getLatestForInvoice(forInvoice), NotFound.class) //
 		.orElseGet(() -> {
 		    return qoDAO.save(QazkomOrder.builder() //
 			    .forInvoice(forInvoice) //
@@ -314,7 +321,8 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 		qe = qeDAO.save(temp);
 	    }
 
-	    final QazkomOrder qo = qoDAO.optionalByNumber(qe.getOrderNumber()) //
+	    final QazkomOrder qo = MyOptionals //
+		    .ifCheckedException(() -> qoDAO.getByNumber(qe.getOrderNumber()), NotFound.class) //
 		    .orElseThrow(illegalArgumentSupplierFormat(
 			    "No QazkomOrder found or reference is invlaid - '%1$s'", qe.getOrderNumber()));
 	    logger.INFO.log("QazkomOrder OK - '%1$s'", qo);
