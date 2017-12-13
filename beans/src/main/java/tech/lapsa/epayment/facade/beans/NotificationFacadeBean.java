@@ -1,7 +1,5 @@
 package tech.lapsa.epayment.facade.beans;
 
-import static tech.lapsa.java.commons.function.MyExceptions.*;
-
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -10,15 +8,16 @@ import javax.inject.Inject;
 import javax.jms.Destination;
 
 import tech.lapsa.epayment.domain.Invoice;
-import tech.lapsa.epayment.facade.NotificationFacade;
+import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeLocal;
+import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeRemote;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
-import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
-import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
+import tech.lapsa.java.commons.function.MyExceptions;
+import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.javax.jms.client.JmsClientFactory;
 import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
 
 @Stateless
-public class NotificationFacadeBean implements NotificationFacade {
+public class NotificationFacadeBean implements NotificationFacadeLocal, NotificationFacadeRemote {
 
     // READERS
 
@@ -26,13 +25,14 @@ public class NotificationFacadeBean implements NotificationFacade {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void send(final Notification notification) throws IllegalArgument, IllegalState {
-	reThrowAsChecked(() -> _send(notification));
+    public void send(final Notification notification) throws IllegalArgumentException {
+	_send(notification);
     }
 
     // PRIVATE
 
-    private void _send(final Notification notification) {
+    private void _send(final Notification notification) throws IllegalArgumentException {
+	MyObjects.requireNonNull(notification, "notification");
 	final Destination destination = resolveDestination(notification);
 	final JmsEventNotificatorClient<Invoice> notificator = jmsFactory.createEventNotificator(destination);
 	notificator.eventNotify(notification.getEntity(), notification.getProperties());
@@ -47,7 +47,8 @@ public class NotificationFacadeBean implements NotificationFacade {
     @Resource(name = EpaymentDestinations.NOTIFIER_PAYMENTSUCCESS_REQUESTER_EMAIL)
     private Destination paymentSucessUserEmail;
 
-    private Destination resolveDestination(final Notification notification) {
+    private Destination resolveDestination(final Notification notification) throws IllegalArgumentException {
+	MyObjects.requireNonNull(notification, "notification");
 	switch (notification.getEvent()) {
 	case PAYMENT_SUCCESS:
 	    switch (notification.getChannel()) {
@@ -70,11 +71,11 @@ public class NotificationFacadeBean implements NotificationFacade {
 	    default:
 	    }
 	}
-	throw new IllegalStateException(String.format(
+	throw MyExceptions.illegalArgumentFormat(
 		"Can't resolve Destination for channel '%2$s' recipient '%3$s' stage '%1$s'",
 		notification.getEvent(), // 1
 		notification.getChannel(), // 2
 		notification.getRecipientType() // 3
-	));
+	);
     }
 }

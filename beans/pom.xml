@@ -50,7 +50,7 @@
 		</dependency>
 		<dependency>
 			<groupId>tech.lapsa.epayment</groupId>
-			<artifactId>epayment-dao-client</artifactId>
+			<artifactId>epayment-dao-producer-remote</artifactId>
 			<scope>compile</scope>
 			<optional>false</optional>
 		</dependency>

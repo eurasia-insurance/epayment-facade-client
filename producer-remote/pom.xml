@@ -8,31 +8,18 @@
 		<version>1.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>epayment-facade-client</artifactId>
+	<artifactId>epayment-facade-producer-remote</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Epayment Lib : Facade : EJB-client</name>
+	<name>Epayment Lib : Facade : EJB producer : Remote</name>
 
 	<dependencies>
-		<!-- tech -->
+		<!-- own -->
 		<dependency>
-			<groupId>tech.lapsa.epayment</groupId>
-			<artifactId>epayment-domain</artifactId>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>epayment-facade-client</artifactId>
 			<scope>compile</scope>
 			<optional>false</optional>
-		</dependency>
-		<!-- oldies -->
-		<dependency>
-			<groupId>com.lapsa.international-lib</groupId>
-			<artifactId>international-core</artifactId>
-			<scope>compile</scope>
-			<optional>false</optional>
-		</dependency>
-		<!-- Payara -->
-		<dependency>
-			<groupId>org.eclipse.persistence</groupId>
-			<artifactId>org.eclipse.persistence.core</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<!-- JavaEE -->
 		<dependency>

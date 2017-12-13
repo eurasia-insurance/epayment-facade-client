@@ -5,35 +5,41 @@ import java.time.Instant;
 import java.util.Currency;
 
 import javax.ejb.Local;
+import javax.ejb.Remote;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
-import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
-import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 
-@Local
 public interface EpaymentFacade {
 
-    URI getDefaultPaymentURI(String invoiceNumber) throws IllegalArgument, IllegalState;
+    @Local
+    public interface EpaymentFacadeLocal extends EpaymentFacade {
+    }
 
-    String invoiceAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgument, IllegalState;
+    @Remote
+    public interface EpaymentFacadeRemote extends EpaymentFacade {
+    }
 
-    Invoice getInvoiceByNumber(String invoiceNumber) throws IllegalArgument, IllegalState;
+    URI getDefaultPaymentURI(String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound;
 
-    boolean hasInvoiceWithNumber(String invoiceNumber) throws IllegalArgument, IllegalState;
+    Invoice getInvoiceByNumber(String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound;
+
+    boolean hasInvoiceWithNumber(String invoiceNumber) throws IllegalArgumentException;
+
+    String invoiceAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgumentException;
 
     // qazkom type
 
-    String processQazkomFailure(String failureXml) throws IllegalArgument, IllegalState;
+    String processQazkomFailure(String failureXml) throws IllegalArgumentException, IllegalStateException;
 
     PaymentMethod qazkomHttpMethod(URI postbackURI, URI failureURI, URI returnURI, Invoice forInvoice)
-	    throws IllegalArgument, IllegalState;
+	    throws IllegalArgumentException;
 
-    void completeWithQazkomPayment(String postbackXml) throws IllegalArgument, IllegalState;
+    void completeWithQazkomPayment(String postbackXml) throws IllegalArgumentException, IllegalStateException;
 
     // unknown type
 
     void completeWithUnknownPayment(String invoiceNumber, Double paidAmount, Currency paidCurency, Instant paidInstant,
-	    String paidReference) throws IllegalArgument, IllegalState;
+	    String paidReference) throws IllegalArgumentException, IllegalStateException;
 
 }

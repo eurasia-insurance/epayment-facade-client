@@ -18,6 +18,9 @@
 	<modules>
 		<module>client</module>
 		<module>beans</module>
+		<module>ear</module>
+		<module>producer-local</module>
+		<module>producer-remote</module>
 	</modules>
 
 	<properties>
@@ -78,6 +81,22 @@
 				<artifactId>epayment-facade</artifactId>
 				<version>${project.version}</version>
 				<type>ejb</type>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>epayment-facade-ear</artifactId>
+				<version>${project.version}</version>
+				<type>ear</type>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>epayment-facade-producer-local</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>epayment-facade-producer-remote</artifactId>
+				<version>${project.version}</version>
 			</dependency>
 			<!-- tech -->
 			<dependency>
