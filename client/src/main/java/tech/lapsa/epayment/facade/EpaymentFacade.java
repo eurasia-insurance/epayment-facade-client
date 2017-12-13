@@ -8,32 +8,30 @@ import javax.ejb.Local;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
-import tech.lapsa.java.commons.function.MyExceptions.IllegalArgument;
-import tech.lapsa.java.commons.function.MyExceptions.IllegalState;
 
 @Local
 public interface EpaymentFacade {
 
-    URI getDefaultPaymentURI(String invoiceNumber) throws IllegalArgument, IllegalState;
+    URI getDefaultPaymentURI(String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound;
 
-    String invoiceAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgument, IllegalState;
+    Invoice getInvoiceByNumber(String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound;
 
-    Invoice getInvoiceByNumber(String invoiceNumber) throws IllegalArgument, IllegalState;
+    boolean hasInvoiceWithNumber(String invoiceNumber) throws IllegalArgumentException;
 
-    boolean hasInvoiceWithNumber(String invoiceNumber) throws IllegalArgument, IllegalState;
+    String invoiceAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgumentException;
 
     // qazkom type
 
-    String processQazkomFailure(String failureXml) throws IllegalArgument, IllegalState;
+    String processQazkomFailure(String failureXml) throws IllegalArgumentException, IllegalStateException;
 
     PaymentMethod qazkomHttpMethod(URI postbackURI, URI failureURI, URI returnURI, Invoice forInvoice)
-	    throws IllegalArgument, IllegalState;
+	    throws IllegalArgumentException;
 
-    void completeWithQazkomPayment(String postbackXml) throws IllegalArgument, IllegalState;
+    void completeWithQazkomPayment(String postbackXml) throws IllegalArgumentException, IllegalStateException;
 
     // unknown type
 
     void completeWithUnknownPayment(String invoiceNumber, Double paidAmount, Currency paidCurency, Instant paidInstant,
-	    String paidReference) throws IllegalArgument, IllegalState;
+	    String paidReference) throws IllegalArgumentException, IllegalStateException;
 
 }

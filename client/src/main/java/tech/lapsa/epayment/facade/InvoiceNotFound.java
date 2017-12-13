@@ -1,4 +1,4 @@
-package tech.lapsa.epayment.facade.beans;
+package tech.lapsa.epayment.facade;
 
 public class InvoiceNotFound extends IllegalArgumentException {
 
