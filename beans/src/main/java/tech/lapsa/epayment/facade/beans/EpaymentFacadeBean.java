@@ -11,16 +11,18 @@ import java.util.Properties;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
-import tech.lapsa.epayment.dao.InvoiceDAO.InvoiceDAORemote;
-import tech.lapsa.epayment.dao.PaymentDAO.PaymentDAORemote;
-import tech.lapsa.epayment.dao.QazkomErrorDAO.QazkomErrorDAORemote;
-import tech.lapsa.epayment.dao.QazkomOrderDAO.QazkomOrderDAORemote;
-import tech.lapsa.epayment.dao.QazkomPaymentDAO.QazkomPaymentDAORemote;
+import tech.lapsa.epayment.dao.EJBViaCDI;
+import tech.lapsa.epayment.dao.InvoiceDAO;
+import tech.lapsa.epayment.dao.PaymentDAO;
+import tech.lapsa.epayment.dao.QazkomErrorDAO;
+import tech.lapsa.epayment.dao.QazkomOrderDAO;
+import tech.lapsa.epayment.dao.QazkomPaymentDAO;
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 import tech.lapsa.epayment.domain.Payment;
@@ -29,12 +31,14 @@ import tech.lapsa.epayment.domain.QazkomOrder;
 import tech.lapsa.epayment.domain.QazkomPayment;
 import tech.lapsa.epayment.domain.UnknownPayment;
 import tech.lapsa.epayment.facade.EpaymentFacade;
+import tech.lapsa.epayment.facade.EpaymentFacade.EpaymentFacadeLocal;
+import tech.lapsa.epayment.facade.EpaymentFacade.EpaymentFacadeRemote;
 import tech.lapsa.epayment.facade.InvoiceNotFound;
-import tech.lapsa.epayment.facade.NotificationFacade;
 import tech.lapsa.epayment.facade.NotificationFacade.Notification;
 import tech.lapsa.epayment.facade.NotificationFacade.Notification.NotificationChannel;
 import tech.lapsa.epayment.facade.NotificationFacade.Notification.NotificationEventType;
 import tech.lapsa.epayment.facade.NotificationFacade.Notification.NotificationRecipientType;
+import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeLocal;
 import tech.lapsa.epayment.facade.PaymentMethod;
 import tech.lapsa.epayment.facade.PaymentMethod.Http;
 import tech.lapsa.epayment.shared.entity.XmlInvoiceHasPaidEvent;
@@ -50,8 +54,9 @@ import tech.lapsa.javax.jms.client.JmsDestination;
 import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
 import tech.lapsa.patterns.dao.NotFound;
 
-@Stateless
-public class EpaymentFacadeBean implements EpaymentFacade {
+@Singleton
+@Startup
+public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRemote {
 
     static final String JNDI_CONFIG = "epayment/resource/Configuration";
     static final String PROPERTY_DEFAULT_PAYMENT_URI_PATTERN = "default-payment-uri.pattern";
@@ -127,23 +132,28 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 	    .withNameOf(EpaymentFacade.class) //
 	    .build();
 
-    @EJB
-    private InvoiceDAORemote invoiceDAO;
-
-    @EJB
-    private PaymentDAORemote paymentDAO;
-
-    @EJB
-    private QazkomOrderDAORemote qoDAO;
-
-    @EJB
-    private QazkomPaymentDAORemote qpDAO;
-
-    @EJB
-    private QazkomErrorDAORemote qeDAO;
+    @Inject
+    @EJBViaCDI
+    private InvoiceDAO invoiceDAO;
 
     @Inject
-    private NotificationFacade notifications;
+    @EJBViaCDI
+    private PaymentDAO paymentDAO;
+
+    @Inject
+    @EJBViaCDI
+    private QazkomOrderDAO qoDAO;
+
+    @Inject
+    @EJBViaCDI
+    private QazkomPaymentDAO qpDAO;
+
+    @Inject
+    @EJBViaCDI
+    private QazkomErrorDAO qeDAO;
+
+    @EJB
+    private NotificationFacadeLocal notifications;
 
     @Resource(lookup = JNDI_CONFIG)
     private Properties epaymentConfig;
@@ -219,7 +229,6 @@ public class EpaymentFacadeBean implements EpaymentFacade {
 
     private void _completeWithQazkomPayment(final String postbackXml)
 	    throws IllegalArgumentException, IllegalStateException {
-	MyObjects.requireNonNull(qazkomSettings, "qazkomSettings");
 	MyStrings.requireNonEmpty(postbackXml, "postbackXml");
 
 	logger.INFO.log("New postback '%1$s'", postbackXml);

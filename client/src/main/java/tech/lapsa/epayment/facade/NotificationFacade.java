@@ -7,13 +7,21 @@ import java.util.Map;
 import java.util.Properties;
 
 import javax.ejb.Local;
+import javax.ejb.Remote;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 
-@Local
 public interface NotificationFacade {
+
+    @Local
+    public interface NotificationFacadeLocal extends NotificationFacade {
+    }
+
+    @Remote
+    public interface NotificationFacadeRemote extends NotificationFacade {
+    }
 
     void send(Notification notification) throws IllegalArgumentException;
 

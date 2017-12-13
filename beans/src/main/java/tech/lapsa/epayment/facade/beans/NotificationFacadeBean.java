@@ -8,7 +8,8 @@ import javax.inject.Inject;
 import javax.jms.Destination;
 
 import tech.lapsa.epayment.domain.Invoice;
-import tech.lapsa.epayment.facade.NotificationFacade;
+import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeLocal;
+import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeRemote;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
 import tech.lapsa.java.commons.function.MyExceptions;
 import tech.lapsa.java.commons.function.MyObjects;
@@ -16,7 +17,7 @@ import tech.lapsa.javax.jms.client.JmsClientFactory;
 import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
 
 @Stateless
-public class NotificationFacadeBean implements NotificationFacade {
+public class NotificationFacadeBean implements NotificationFacadeLocal, NotificationFacadeRemote {
 
     // READERS
 

@@ -5,12 +5,20 @@ import java.time.Instant;
 import java.util.Currency;
 
 import javax.ejb.Local;
+import javax.ejb.Remote;
 
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 
-@Local
 public interface EpaymentFacade {
+
+    @Local
+    public interface EpaymentFacadeLocal extends EpaymentFacade {
+    }
+
+    @Remote
+    public interface EpaymentFacadeRemote extends EpaymentFacade {
+    }
 
     URI getDefaultPaymentURI(String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound;
 
