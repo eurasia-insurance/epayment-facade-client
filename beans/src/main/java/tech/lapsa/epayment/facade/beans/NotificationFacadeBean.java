@@ -11,6 +11,7 @@ import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeLocal;
 import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeRemote;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
+import tech.lapsa.java.commons.exceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyExceptions;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.javax.jms.client.JmsClientFactory;
@@ -25,8 +26,12 @@ public class NotificationFacadeBean implements NotificationFacadeLocal, Notifica
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void send(final Notification notification) throws IllegalArgumentException {
-	_send(notification);
+    public void send(final Notification notification) throws IllegalArgument {
+	try {
+	    _send(notification);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
     }
 
     // PRIVATE
@@ -71,7 +76,7 @@ public class NotificationFacadeBean implements NotificationFacadeLocal, Notifica
 	    default:
 	    }
 	}
-	throw MyExceptions.illegalArgumentFormat(
+	throw MyExceptions.format(IllegalArgumentException::new,
 		"Can't resolve Destination for channel '%2$s' recipient '%3$s' stage '%1$s'",
 		notification.getEvent(), // 1
 		notification.getChannel(), // 2

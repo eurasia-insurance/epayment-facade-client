@@ -1,7 +1,5 @@
 package tech.lapsa.epayment.facade.beans;
 
-import static tech.lapsa.java.commons.function.MyExceptions.*;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
@@ -11,24 +9,26 @@ import java.util.Properties;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.ejb.EJBException;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
-import tech.lapsa.epayment.dao.EJBViaCDI;
-import tech.lapsa.epayment.dao.InvoiceDAO;
-import tech.lapsa.epayment.dao.PaymentDAO;
-import tech.lapsa.epayment.dao.QazkomErrorDAO;
-import tech.lapsa.epayment.dao.QazkomOrderDAO;
-import tech.lapsa.epayment.dao.QazkomPaymentDAO;
+import tech.lapsa.epayment.dao.InvoiceDAO.InvoiceDAORemote;
+import tech.lapsa.epayment.dao.PaymentDAO.PaymentDAORemote;
+import tech.lapsa.epayment.dao.QazkomErrorDAO.QazkomErrorDAORemote;
+import tech.lapsa.epayment.dao.QazkomOrderDAO.QazkomOrderDAORemote;
+import tech.lapsa.epayment.dao.QazkomPaymentDAO.QazkomPaymentDAORemote;
 import tech.lapsa.epayment.domain.Invoice;
 import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
+import tech.lapsa.epayment.domain.NonUniqueNumberException;
+import tech.lapsa.epayment.domain.NumberOfAttemptsExceedException;
 import tech.lapsa.epayment.domain.Payment;
 import tech.lapsa.epayment.domain.QazkomError;
 import tech.lapsa.epayment.domain.QazkomOrder;
 import tech.lapsa.epayment.domain.QazkomPayment;
+import tech.lapsa.epayment.domain.QazkomPayment.QazkomPaymentBuilder;
 import tech.lapsa.epayment.domain.UnknownPayment;
 import tech.lapsa.epayment.facade.EpaymentFacade;
 import tech.lapsa.epayment.facade.EpaymentFacade.EpaymentFacadeLocal;
@@ -43,6 +43,8 @@ import tech.lapsa.epayment.facade.PaymentMethod;
 import tech.lapsa.epayment.facade.PaymentMethod.Http;
 import tech.lapsa.epayment.shared.entity.XmlInvoiceHasPaidEvent;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
+import tech.lapsa.java.commons.exceptions.IllegalArgument;
+import tech.lapsa.java.commons.exceptions.IllegalState;
 import tech.lapsa.java.commons.function.MyExceptions;
 import tech.lapsa.java.commons.function.MyMaps;
 import tech.lapsa.java.commons.function.MyNumbers;
@@ -54,8 +56,7 @@ import tech.lapsa.javax.jms.client.JmsDestination;
 import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
 import tech.lapsa.patterns.dao.NotFound;
 
-@Singleton
-@Startup
+@Stateless
 public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRemote {
 
     static final String JNDI_CONFIG = "epayment/resource/Configuration";
@@ -75,55 +76,108 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public URI getDefaultPaymentURI(String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound {
-	return _getDefaultPaymentURI(invoiceNumber);
+    public URI getDefaultPaymentURI(final String invoiceNumber) throws IllegalArgument, InvoiceNotFound {
+	try {
+	    return _getDefaultPaymentURI(invoiceNumber);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Invoice getInvoiceByNumber(final String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound {
-	return _invoiceByNumber(invoiceNumber);
+    public Invoice getInvoiceByNumber(final String invoiceNumber) throws IllegalArgument, InvoiceNotFound {
+	try {
+	    return _invoiceByNumber(invoiceNumber);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public boolean hasInvoiceWithNumber(final String invoiceNumber) throws IllegalArgumentException {
-	return _hasInvoiceWithNumber(invoiceNumber);
+    public boolean hasInvoiceWithNumber(final String invoiceNumber) throws IllegalArgument {
+	try {
+	    return _hasInvoiceWithNumber(invoiceNumber);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public PaymentMethod qazkomHttpMethod(final URI postbackURI, final URI failureURI, final URI returnURI,
-	    final Invoice forInvoice) throws IllegalArgumentException {
-	return _qazkomHttpMethod(postbackURI, failureURI, returnURI, forInvoice);
+    public PaymentMethod qazkomHttpMethod(final URI postbackURI,
+	    final URI failureURI,
+	    final URI returnURI,
+	    final Invoice forInvoice) throws IllegalArgument {
+	try {
+	    return _qazkomHttpMethod(postbackURI, failureURI, returnURI, forInvoice);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public PaymentMethod qazkomHttpMethod(final URI postbackURI,
+	    final URI failureURI,
+	    final URI returnURI,
+	    final String invoiceNumber) throws IllegalArgument, InvoiceNotFound {
+	try {
+	    return _qazkomHttpMethod(postbackURI, failureURI, returnURI, invoiceNumber);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
     }
 
     // MODIFIERS
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public String invoiceAccept(final InvoiceBuilder builder) throws IllegalArgumentException {
-	return _invoiceAccept(builder);
+    public String invoiceAccept(final InvoiceBuilder builder) throws IllegalArgument {
+	try {
+	    return _invoiceAccept(builder);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void completeWithUnknownPayment(final String invoiceNumber, Double paidAmount, Currency paidCurency,
-	    Instant paidInstant, String paidReference) throws IllegalArgumentException, IllegalStateException {
-	_completeWithUnknownPayment(invoiceNumber, paidAmount, paidCurency, paidInstant, paidReference);
+    public void completeWithUnknownPayment(final String invoiceNumber,
+	    final Double paidAmount,
+	    final Currency paidCurency,
+	    final Instant paidInstant,
+	    final String paidReference) throws IllegalArgument, IllegalState, InvoiceNotFound {
+	try {
+	    _completeWithUnknownPayment(invoiceNumber, paidAmount, paidCurency, paidInstant, paidReference);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	} catch (IllegalStateException e) {
+	    throw IllegalState.from(e);
+	}
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public String processQazkomFailure(final String failureXml) throws IllegalArgumentException, IllegalStateException {
-	return _processQazkomFailure(failureXml);
+    public String processQazkomFailure(final String failureXml) throws IllegalArgument {
+	try {
+	    return _processQazkomFailure(failureXml);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	}
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void completeWithQazkomPayment(final String postbackXml)
-	    throws IllegalArgumentException, IllegalStateException {
-	_completeWithQazkomPayment(postbackXml);
+    public void completeWithQazkomPayment(final String postbackXml) throws IllegalArgument, IllegalState {
+	try {
+	    _completeWithQazkomPayment(postbackXml);
+	} catch (IllegalArgumentException e) {
+	    throw IllegalArgument.from(e);
+	} catch (IllegalStateException e) {
+	    throw IllegalState.from(e);
+	}
     }
 
     // PRIVATE
@@ -132,25 +186,24 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    .withNameOf(EpaymentFacade.class) //
 	    .build();
 
-    @Inject
-    @EJBViaCDI
-    private InvoiceDAO invoiceDAO;
+    // dao (remote)
 
-    @Inject
-    @EJBViaCDI
-    private PaymentDAO paymentDAO;
+    @EJB
+    private InvoiceDAORemote invoiceDAO;
 
-    @Inject
-    @EJBViaCDI
-    private QazkomOrderDAO qoDAO;
+    @EJB
+    private PaymentDAORemote paymentDAO;
 
-    @Inject
-    @EJBViaCDI
-    private QazkomPaymentDAO qpDAO;
+    @EJB
+    private QazkomOrderDAORemote qoDAO;
 
-    @Inject
-    @EJBViaCDI
-    private QazkomErrorDAO qeDAO;
+    @EJB
+    private QazkomPaymentDAORemote qpDAO;
+
+    @EJB
+    private QazkomErrorDAORemote qeDAO;
+
+    // own (local)
 
     @EJB
     private NotificationFacadeLocal notifications;
@@ -170,15 +223,23 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
     private Invoice _invoiceByNumber(final String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound {
 	MyStrings.requireNonEmpty(invoiceNumber, "invoiceNumber");
 	try {
-	    final Invoice i = invoiceDAO.getByNumber(invoiceNumber);
-	    return i;
+	    return invoiceDAO.getByNumber(invoiceNumber);
 	} catch (NotFound e) {
 	    throw MyExceptions.format(InvoiceNotFound::new, "Invoice not found with number %1$s", invoiceNumber);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
 	}
     }
 
     private URI _getDefaultPaymentURI(final String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound {
 	final Invoice invoice = _invoiceByNumber(invoiceNumber);
+	return _getDefaultPaymentURI(invoice);
+    }
+
+    private URI _getDefaultPaymentURI(final Invoice invoice) throws IllegalArgumentException {
+	MyObjects.requireNonNull(invoice, "invoice");
+
 	final String pattern = epaymentConfig.getProperty(PROPERTY_DEFAULT_PAYMENT_URI_PATTERN);
 	try {
 	    final String parsed = pattern //
@@ -186,149 +247,278 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 		    .replace("@INVOICE_NUMBER@", invoice.getNumber()) //
 		    .replace("@LANG@", invoice.getConsumerPreferLanguage().getTag());
 	    return new URI(parsed);
-	} catch (final URISyntaxException e) {
-	    throw new RuntimeException(e);
-	} catch (final NullPointerException e) {
-	    throw new RuntimeException(e);
+	} catch (final URISyntaxException | NullPointerException e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
 	}
     }
 
     private String _invoiceAccept(final InvoiceBuilder builder) throws IllegalArgumentException {
-	final Invoice saved = invoiceDAO.save(builder.build(invoiceDAO::isUniqueNumber));
-	if (saved.optionalConsumerEmail().isPresent()) {
-	    saved.unlazy();
-	    notifications.send(Notification.builder() //
-		    .withChannel(NotificationChannel.EMAIL) //
-		    .withEvent(NotificationEventType.PAYMENT_LINK) //
-		    .withRecipient(NotificationRecipientType.REQUESTER) //
-		    .withProperty("paymentUrl", _getDefaultPaymentURI(saved.getNumber()).toString()) //
-		    .forEntity(saved) //
-		    .build() //
-	    );
-	    logger.FINE.log("Payment accepted notification sent '%1$s'", saved);
+	MyObjects.requireNonNull(builder, "builder");
+
+	final Invoice temp;
+	try {
+	    temp = builder.build(qoDAO::isValidUniqueNumber);
+	} catch (IllegalArgumentException | NumberOfAttemptsExceedException | NonUniqueNumberException e1) {
+	    // it should not happens
+	    throw new EJBException(e1.getMessage());
 	}
-	return saved.getNumber();
+
+	final Invoice i;
+	try {
+	    i = invoiceDAO.save(temp);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
+
+	if (i.optionalConsumerEmail().isPresent()) {
+	    i.unlazy();
+	    try {
+		notifications.send(Notification.builder() //
+			.withChannel(NotificationChannel.EMAIL) //
+			.withEvent(NotificationEventType.PAYMENT_LINK) //
+			.withRecipient(NotificationRecipientType.REQUESTER) //
+			.withProperty("paymentUrl", _getDefaultPaymentURI(i).toString()) //
+			.forEntity(i) //
+			.build());
+	    } catch (IllegalArgument e) {
+		// it should not happens
+		throw new EJBException(e.getMessage());
+	    }
+	    logger.FINE.log("Payment accepted notification sent '%1$s'", i);
+	}
+	return i.getNumber();
     }
 
     private void _completeWithUnknownPayment(final String invoiceNumber, final Double paidAmount,
 	    final Currency paidCurency, final Instant paidInstant, final String paidReference)
 	    throws IllegalArgumentException, IllegalStateException, InvoiceNotFound {
-	final UnknownPayment up;
-	{
-	    final UnknownPayment temp = UnknownPayment.builder() //
-		    .withAmount(MyNumbers.requireNonZero(paidAmount, "paidAmount")) //
-		    .withCurrency(MyObjects.requireNonNull(paidCurency, "paidCurency")) //
-		    .withCreationInstant(MyOptionals.of(paidInstant)) //
-		    .withReferenceNumber(MyOptionals.of(paidReference)) //
-		    .build();
-	    up = paymentDAO.save(temp);
+
+	MyStrings.requireNonEmpty(invoiceNumber, "invoiceNumber");
+	MyNumbers.requireNonZero(paidAmount, "paidAmount");
+	MyObjects.requireNonNull(paidCurency, "paidCurency");
+
+	final UnknownPayment temp = UnknownPayment.builder() //
+		.withAmount(paidAmount) //
+		.withCurrency(paidCurency) //
+		.withCreationInstant(MyOptionals.of(paidInstant)) //
+		.withReferenceNumber(MyOptionals.of(paidReference)) //
+		.build();
+
+	final UnknownPayment p;
+	try {
+	    p = paymentDAO.save(temp);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
 	}
-	final Invoice invoice = _invoiceByNumber(invoiceNumber);
-	_invoiceHasPaidBy(invoice, up);
+
+	final Invoice i = _invoiceByNumber(invoiceNumber);
+	_invoiceHasPaidBy(i, p);
     }
 
     private void _completeWithQazkomPayment(final String postbackXml)
 	    throws IllegalArgumentException, IllegalStateException {
+
 	MyStrings.requireNonEmpty(postbackXml, "postbackXml");
 
 	logger.INFO.log("New postback '%1$s'", postbackXml);
 
-	final QazkomPayment qp;
-	{
-	    final QazkomPayment temp = QazkomPayment.builder() //
-		    .fromRawXml(postbackXml) //
-		    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE) //
-		    .build();
-	    if (!qpDAO.isUniqueNumber(temp.getOrderNumber()))
-		throw MyExceptions.illegalStateFormat("Already processed QazkomPayment with order number %1$s",
-			temp.getOrderNumber());
-	    qp = qpDAO.save(temp);
+	final QazkomPaymentBuilder builder = QazkomPayment.builder();
+
+	try {
+	    builder
+		    .fromRawXml(postbackXml)
+		    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE);
+	} catch (IllegalArgumentException e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
 	}
 
-	logger.INFO.log("QazkomPayment OK - '%1$s'", qp);
+	final QazkomPayment np = builder.build();
 
-	final QazkomOrder qo = MyOptionals
-		.ifCheckedException(() -> qoDAO.getByNumber(qp.getOrderNumber()), NotFound.class) //
-		.orElseThrow(illegalArgumentSupplierFormat(
-			"No QazkomOrder found or reference is invlaid - '%1$s'", qp.getOrderNumber()));
-	logger.INFO.log("QazkomOrder OK - '%1$s'", qo);
+	final String orderNumber = np.getOrderNumber();
+	MyStrings.requireNonEmpty(orderNumber, "orderNumber");
 
-	qo.paidBy(qp);
-	qoDAO.save(qo);
+	try {
+	    if (!qpDAO.isUniqueNumber(orderNumber))
+		throw MyExceptions.illegalStateFormat("Already processed QazkomPayment with order number %1$s",
+			orderNumber);
+	} catch (final IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
 
-	final Invoice i = qo.optionalForInvoice() //
-		.orElseThrow(illegalStateSupplierFormat("No Invoice attached - '%1$s'", qo));
-	logger.INFO.log("Invoice OK - '%1$s'", i);
+	final QazkomPayment p;
+	try {
+	    p = qpDAO.save(np);
+	} catch (final IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
 
-	_invoiceHasPaidBy(i, qpDAO.save(qp));
+	logger.INFO.log("QazkomPayment OK - '%1$s'", p);
+
+	final QazkomOrder o;
+	try {
+	    o = qoDAO.getByNumber(orderNumber);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	} catch (NotFound e) {
+	    throw MyExceptions.illegalArgumentFormat("No QazkomOrder found or reference is invlaid - '%1$s'",
+		    orderNumber);
+	}
+	logger.INFO.log("QazkomOrder OK - '%1$s'", o);
+
+	try {
+	    o.paidBy(p);
+	} catch (IllegalArgumentException e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	} catch (IllegalArgument e) {
+	    // payment is inconsistent
+	    throw e.getRuntime();
+	} catch (IllegalState e) {
+	    // order can't be paid
+	    throw e.getRuntime();
+	}
+
+	try {
+	    qoDAO.save(o);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
+	try {
+	    qpDAO.save(p);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
+
+	final Invoice i = o.getForInvoice();
+	_invoiceHasPaidBy(i, p);
     }
 
-    private PaymentMethod _qazkomHttpMethod(final URI postbackURI, final URI failureURI, final URI returnURI,
-	    final Invoice forInvoice) throws IllegalArgumentException, IllegalStateException {
+    private PaymentMethod _qazkomHttpMethod(final URI postbackURI,
+	    final URI failureURI,
+	    final URI returnURI,
+	    final String invoiceNumber) throws IllegalArgumentException, InvoiceNotFound {
+
+	final Invoice i = _invoiceByNumber(invoiceNumber);
+	return _qazkomHttpMethod(postbackURI, failureURI, returnURI, i);
+    }
+
+    private PaymentMethod _qazkomHttpMethod(final URI postbackURI,
+	    final URI failureURI,
+	    final URI returnURI,
+	    final Invoice forInvoice) throws IllegalArgumentException {
+
 	MyObjects.requireNonNull(postbackURI, "postbackURI");
 	MyObjects.requireNonNull(failureURI, "failureURI");
 	MyObjects.requireNonNull(returnURI, "returnURI");
 	MyObjects.requireNonNull(forInvoice, "forInvoice");
 
-	final QazkomOrder o = MyOptionals //
-		.ifCheckedException(() -> qoDAO.getLatestForInvoice(forInvoice), NotFound.class) //
-		.orElseGet(() -> {
-		    final QazkomOrder qo = QazkomOrder.builder() //
+	final QazkomOrder o;
+	{
+	    QazkomOrder temp;
+	    try {
+		temp = qoDAO.getLatestForInvoice(forInvoice);
+	    } catch (IllegalArgument e) {
+		// it should not happens
+		throw new EJBException(e.getMessage());
+	    } catch (NotFound e) {
+		// еще небыло ордеров
+		try {
+		    temp = QazkomOrder.builder() //
 			    .forInvoice(forInvoice) //
 			    .withGeneratedNumber() //
 			    .withMerchant(qazkomSettings.QAZKOM_MERCHANT_ID, //
 				    qazkomSettings.QAZKOM_MERCHANT_NAME, //
 				    qazkomSettings.QAZKOM_MERCHANT_CERTIFICATE, //
 				    qazkomSettings.QAZKOM_MERCHANT_key) //
-			    .build(qoDAO::isUniqueNumber);
-		    return qoDAO.save(qo);
-		});
-
-	final Http http = new Http(qazkomSettings.QAZKOM_EPAY_URI, qazkomSettings.QAZKOM_EPAY_HTTP_METHOD,
-		MyMaps.of(
-			"Signed_Order_B64", MyStrings.requireNonEmpty(o.getOrderDoc().getBase64Xml(), "content"), //
-			"template", qazkomSettings.QAZKOM_EPAY_TEMPLATE, //
-			"email", forInvoice.optionalConsumerEmail().orElse(""), //
-			"PostLink", postbackURI.toASCIIString(),
-			"FailurePostLink", failureURI.toASCIIString(),
-			"Language", forInvoice.getConsumerPreferLanguage().getTag(), //
-			"appendix", o.getCartDoc().getBase64Xml(), //
-			"BackLink", returnURI.toString() //
-		));
-
-	return new PaymentMethod() {
-	    private static final long serialVersionUID = 1L;
-
-	    @Override
-	    public Http getHttp() {
-		return http;
+			    .build(qoDAO::isValidUniqueNumber);
+		} catch (IllegalArgumentException | NumberOfAttemptsExceedException | NonUniqueNumberException e1) {
+		    // it should not happens
+		    throw new EJBException(e1.getMessage());
+		}
 	    }
-	};
+	    o = temp;
+	}
+
+	try {
+	    final Http http = new Http(qazkomSettings.QAZKOM_EPAY_URI, qazkomSettings.QAZKOM_EPAY_HTTP_METHOD,
+		    MyMaps.of(
+			    "Signed_Order_B64", o.getOrderDoc().getBase64Xml(), //
+			    "template", qazkomSettings.QAZKOM_EPAY_TEMPLATE, //
+			    "email", forInvoice.optionalConsumerEmail().orElse(""), //
+			    "PostLink", postbackURI.toASCIIString(),
+			    "FailurePostLink", failureURI.toASCIIString(),
+			    "Language", forInvoice.getConsumerPreferLanguage().getTag(), //
+			    "appendix", o.getCartDoc().getBase64Xml(), //
+			    "BackLink", returnURI.toString() //
+		    ));
+	    return new PaymentMethod(http);
+	} catch (IllegalArgumentException e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
+
     }
 
-    private String _processQazkomFailure(final String failureXml)
-	    throws IllegalArgumentException, IllegalStateException {
+    private String _processQazkomFailure(final String failureXml) throws IllegalArgumentException {
+
 	MyStrings.requireNonEmpty(failureXml, "failureXml");
 
 	logger.INFO.log("New failure '%1$s'", failureXml);
 
+	final QazkomError qeNew = QazkomError.builder() //
+		.fromRawXml(failureXml) //
+		.build();
+
 	final QazkomError qe;
-	{
-	    final QazkomError temp = QazkomError.builder() //
-		    .fromRawXml(failureXml) //
-		    .build();
-	    qe = qeDAO.save(temp);
+	try {
+	    qe = qeDAO.save(qeNew);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw e.getRuntime();
 	}
 
-	final QazkomOrder qo = MyOptionals //
-		.ifCheckedException(() -> qoDAO.getByNumber(qe.getOrderNumber()), NotFound.class) //
-		.orElseThrow(illegalArgumentSupplierFormat(
-			"No QazkomOrder found or reference is invlaid - '%1$s'", qe.getOrderNumber()));
+	final String orderNumber = qe.getOrderNumber();
+
+	final QazkomOrder qo;
+	try {
+	    qo = qoDAO.getByNumber(orderNumber);
+	} catch (NotFound | IllegalArgument e) {
+	    throw MyExceptions.illegalArgumentFormat("No QazkomOrder found or order number is invlaid - '%1$s'",
+		    orderNumber);
+	}
 	logger.INFO.log("QazkomOrder OK - '%1$s'", qo);
 
-	qo.attachError(qe);
-	qoDAO.save(qo);
-	qeDAO.save(qe);
+	try {
+	    qo.attachError(qe);
+	} catch (IllegalArgumentException e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	} catch (IllegalArgument e1) {
+	    // error is inconsistent
+	    throw e1.getRuntime();
+	}
+
+	try {
+	    qoDAO.save(qo);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
+	try {
+	    qeDAO.save(qe);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
 
 	return qe.getMessage();
     }
@@ -339,24 +529,53 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
     private void _invoiceHasPaidBy(final Invoice invoice, final Payment payment)
 	    throws IllegalArgumentException, IllegalStateException {
-	MyObjects.requireNonNull(invoice, "invoice");
-	MyObjects.requireNonNull(payment, "payment");
 
-	invoice.paidBy(payment);
-	invoiceDAO.save(invoice);
-	paymentDAO.save(payment);
+	// it should not happens
+	MyObjects.requireNonNull(EJBException::new, invoice, "invoice");
+	// it should not happens
+	MyObjects.requireNonNull(EJBException::new, payment, "payment");
+
+	try {
+	    invoice.paidBy(payment);
+	} catch (IllegalArgumentException e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	} catch (IllegalArgument e) {
+	    // payment is inconsistent
+	    throw e.getRuntime();
+	} catch (IllegalState e) {
+	    // invoice can't be paid
+	    throw e.getRuntime();
+	}
+
+	try {
+	    invoiceDAO.save(invoice);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
+	try {
+	    paymentDAO.save(payment);
+	} catch (IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
 
 	logger.INFO.log("Ivoice has paid successfuly '%1$s'", invoice);
 
 	if (invoice.optionalConsumerEmail().isPresent()) {
 	    invoice.unlazy();
-	    notifications.send(Notification.builder() //
-		    .withChannel(NotificationChannel.EMAIL) //
-		    .withEvent(NotificationEventType.PAYMENT_SUCCESS) //
-		    .withRecipient(NotificationRecipientType.REQUESTER) //
-		    .forEntity(invoice) //
-		    .build() //
-	    );
+	    try {
+		notifications.send(Notification.builder() //
+			.withChannel(NotificationChannel.EMAIL) //
+			.withEvent(NotificationEventType.PAYMENT_SUCCESS) //
+			.withRecipient(NotificationRecipientType.REQUESTER) //
+			.forEntity(invoice) //
+			.build());
+	    } catch (IllegalArgument e) {
+		// it should not happens
+		throw new EJBException(e.getMessage());
+	    }
 	}
 
 	{
