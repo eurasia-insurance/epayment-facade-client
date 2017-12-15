@@ -79,8 +79,8 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
     public URI getDefaultPaymentURI(final String invoiceNumber) throws IllegalArgument, InvoiceNotFound {
 	try {
 	    return _getDefaultPaymentURI(invoiceNumber);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 
@@ -89,8 +89,8 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
     public Invoice getInvoiceByNumber(final String invoiceNumber) throws IllegalArgument, InvoiceNotFound {
 	try {
 	    return _invoiceByNumber(invoiceNumber);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 
@@ -99,8 +99,8 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
     public boolean hasInvoiceWithNumber(final String invoiceNumber) throws IllegalArgument {
 	try {
 	    return _hasInvoiceWithNumber(invoiceNumber);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 
@@ -112,8 +112,8 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    final Invoice forInvoice) throws IllegalArgument {
 	try {
 	    return _qazkomHttpMethod(postbackURI, failureURI, returnURI, forInvoice);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 
@@ -125,8 +125,8 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    final String invoiceNumber) throws IllegalArgument, InvoiceNotFound {
 	try {
 	    return _qazkomHttpMethod(postbackURI, failureURI, returnURI, invoiceNumber);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 
@@ -137,8 +137,8 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
     public String invoiceAccept(final InvoiceBuilder builder) throws IllegalArgument {
 	try {
 	    return _invoiceAccept(builder);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 
@@ -151,10 +151,10 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    final String paidReference) throws IllegalArgument, IllegalState, InvoiceNotFound {
 	try {
 	    _completeWithUnknownPayment(invoiceNumber, paidAmount, paidCurency, paidInstant, paidReference);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
-	} catch (IllegalStateException e) {
-	    throw IllegalState.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
+	} catch (final IllegalStateException e) {
+	    throw new IllegalState(e);
 	}
     }
 
@@ -163,8 +163,8 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
     public String processQazkomFailure(final String failureXml) throws IllegalArgument {
 	try {
 	    return _processQazkomFailure(failureXml);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 
@@ -173,10 +173,10 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
     public void completeWithQazkomPayment(final String postbackXml) throws IllegalArgument, IllegalState {
 	try {
 	    _completeWithQazkomPayment(postbackXml);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
-	} catch (IllegalStateException e) {
-	    throw IllegalState.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
+	} catch (final IllegalStateException e) {
+	    throw new IllegalState(e);
 	}
     }
 
@@ -215,7 +215,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	try {
 	    _invoiceByNumber(invoiceNumber);
 	    return true;
-	} catch (InvoiceNotFound e) {
+	} catch (final InvoiceNotFound e) {
 	    return false;
 	}
     }
@@ -224,9 +224,9 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	MyStrings.requireNonEmpty(invoiceNumber, "invoiceNumber");
 	try {
 	    return invoiceDAO.getByNumber(invoiceNumber);
-	} catch (NotFound e) {
+	} catch (final NotFound e) {
 	    throw MyExceptions.format(InvoiceNotFound::new, "Invoice not found with number %1$s", invoiceNumber);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -267,7 +267,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	final Invoice i;
 	try {
 	    i = invoiceDAO.save(temp);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -282,7 +282,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 			.withProperty("paymentUrl", _getDefaultPaymentURI(i).toString()) //
 			.forEntity(i) //
 			.build());
-	    } catch (IllegalArgument e) {
+	    } catch (final IllegalArgument e) {
 		// it should not happens
 		throw new EJBException(e.getMessage());
 	    }
@@ -309,7 +309,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	final UnknownPayment p;
 	try {
 	    p = paymentDAO.save(temp);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -331,7 +331,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    builder
 		    .fromRawXml(postbackXml)
 		    .withBankCertificate(qazkomSettings.QAZKOM_BANK_CERTIFICATE);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -363,10 +363,10 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	final QazkomOrder o;
 	try {
 	    o = qoDAO.getByNumber(orderNumber);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
-	} catch (NotFound e) {
+	} catch (final NotFound e) {
 	    throw MyExceptions.illegalArgumentFormat("No QazkomOrder found or reference is invlaid - '%1$s'",
 		    orderNumber);
 	}
@@ -374,26 +374,26 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
 	try {
 	    o.paidBy(p);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // payment is inconsistent
 	    throw e.getRuntime();
-	} catch (IllegalState e) {
+	} catch (final IllegalState e) {
 	    // order can't be paid
 	    throw e.getRuntime();
 	}
 
 	try {
 	    qoDAO.save(o);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
 	try {
 	    qpDAO.save(p);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -426,10 +426,10 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    QazkomOrder temp;
 	    try {
 		temp = qoDAO.getLatestForInvoice(forInvoice);
-	    } catch (IllegalArgument e) {
+	    } catch (final IllegalArgument e) {
 		// it should not happens
 		throw new EJBException(e.getMessage());
-	    } catch (NotFound e) {
+	    } catch (final NotFound e) {
 		// еще небыло ордеров
 		try {
 		    temp = QazkomOrder.builder() //
@@ -461,7 +461,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 			    "BackLink", returnURI.toString() //
 		    ));
 	    return new PaymentMethod(http);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -481,7 +481,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	final QazkomError qe;
 	try {
 	    qe = qeDAO.save(qeNew);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw e.getRuntime();
 	}
@@ -499,23 +499,23 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
 	try {
 	    qo.attachError(qe);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
-	} catch (IllegalArgument e1) {
+	} catch (final IllegalArgument e1) {
 	    // error is inconsistent
 	    throw e1.getRuntime();
 	}
 
 	try {
 	    qoDAO.save(qo);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
 	try {
 	    qeDAO.save(qe);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -537,26 +537,26 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
 	try {
 	    invoice.paidBy(payment);
-	} catch (IllegalArgumentException e) {
+	} catch (final IllegalArgumentException e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // payment is inconsistent
 	    throw e.getRuntime();
-	} catch (IllegalState e) {
+	} catch (final IllegalState e) {
 	    // invoice can't be paid
 	    throw e.getRuntime();
 	}
 
 	try {
 	    invoiceDAO.save(invoice);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
 	try {
 	    paymentDAO.save(payment);
-	} catch (IllegalArgument e) {
+	} catch (final IllegalArgument e) {
 	    // it should not happens
 	    throw new EJBException(e.getMessage());
 	}
@@ -572,7 +572,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 			.withRecipient(NotificationRecipientType.REQUESTER) //
 			.forEntity(invoice) //
 			.build());
-	    } catch (IllegalArgument e) {
+	    } catch (final IllegalArgument e) {
 		// it should not happens
 		throw new EJBException(e.getMessage());
 	    }

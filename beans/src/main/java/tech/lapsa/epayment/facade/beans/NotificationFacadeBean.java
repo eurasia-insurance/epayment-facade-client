@@ -29,8 +29,8 @@ public class NotificationFacadeBean implements NotificationFacadeLocal, Notifica
     public void send(final Notification notification) throws IllegalArgument {
 	try {
 	    _send(notification);
-	} catch (IllegalArgumentException e) {
-	    throw IllegalArgument.from(e);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
 	}
     }
 

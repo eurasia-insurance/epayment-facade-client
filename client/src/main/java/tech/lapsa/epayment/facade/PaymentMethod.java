@@ -30,7 +30,7 @@ public class PaymentMethod implements Serializable {
 	final String httpMethod;
 	final Map<String, String> httpParams;
 
-	public Http(URI httpAddress, String httpMethod, Map<String, String> httpParams)
+	public Http(final URI httpAddress, final String httpMethod, final Map<String, String> httpParams)
 		throws IllegalArgumentException {
 	    this.httpAddress = MyObjects.requireNonNull(httpAddress, "httpAddress");
 	    this.httpMethod = MyStrings.requireNonEmpty(httpMethod, "httpMethod");

@@ -8,15 +8,15 @@ public class InvoiceNotFound extends Exception {
 	super();
     }
 
-    public InvoiceNotFound(String message, Throwable cause) {
+    public InvoiceNotFound(final String message, final Throwable cause) {
 	super(message, cause);
     }
 
-    public InvoiceNotFound(String s) {
+    public InvoiceNotFound(final String s) {
 	super(s);
     }
 
-    public InvoiceNotFound(Throwable cause) {
+    public InvoiceNotFound(final Throwable cause) {
 	super(cause);
     }
 

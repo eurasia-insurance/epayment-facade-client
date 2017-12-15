@@ -54,7 +54,7 @@ public interface NotificationFacade {
 	    private NotificationRecipientType recipientType;
 	    private NotificationEventType event;
 	    private Invoice entity;
-	    private Map<String, String> properties = new HashMap<>();
+	    private final Map<String, String> properties = new HashMap<>();
 
 	    private NotificationBuilder() {
 	    }
@@ -99,8 +99,8 @@ public interface NotificationFacade {
 	private final Invoice entity;
 	private final Map<String, String> propsMap;
 
-	private Notification(NotificationChannel channel, NotificationRecipientType recipientType,
-		NotificationEventType event, Invoice entity, Map<String, String> propsMap)
+	private Notification(final NotificationChannel channel, final NotificationRecipientType recipientType,
+		final NotificationEventType event, final Invoice entity, final Map<String, String> propsMap)
 		throws IllegalArgument {
 	    this.channel = MyObjects.requireNonNull(IllegalArgument::new, channel, "channel");
 	    this.recipientType = MyObjects.requireNonNull(IllegalArgument::new, recipientType, "recipientType");
