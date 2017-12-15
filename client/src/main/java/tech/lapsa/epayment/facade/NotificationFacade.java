@@ -14,7 +14,7 @@ import tech.lapsa.java.commons.exceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 
-public interface NotificationFacade {
+public interface NotificationFacade extends EJBConstants {
 
     @Local
     public interface NotificationFacadeLocal extends NotificationFacade {

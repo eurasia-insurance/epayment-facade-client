@@ -12,7 +12,7 @@ import tech.lapsa.epayment.domain.Invoice.InvoiceBuilder;
 import tech.lapsa.java.commons.exceptions.IllegalArgument;
 import tech.lapsa.java.commons.exceptions.IllegalState;
 
-public interface EpaymentFacade {
+public interface EpaymentFacade extends EJBConstants {
 
     @Local
     public interface EpaymentFacadeLocal extends EpaymentFacade {
