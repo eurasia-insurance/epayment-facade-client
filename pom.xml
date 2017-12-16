@@ -18,7 +18,7 @@
 	<modules>
 		<module>client</module>
 		<module>beans</module>
-		<module>ear</module>
+		<module>app</module>
 	</modules>
 
 	<properties>
@@ -82,7 +82,7 @@
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>epayment-facade-ear</artifactId>
+				<artifactId>epayment-facade-app</artifactId>
 				<version>${project.version}</version>
 				<type>ear</type>
 			</dependency>
