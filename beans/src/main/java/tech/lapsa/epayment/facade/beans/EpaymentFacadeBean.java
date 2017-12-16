@@ -56,7 +56,7 @@ import tech.lapsa.javax.jms.client.JmsDestination;
 import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
 import tech.lapsa.patterns.dao.NotFound;
 
-@Stateless
+@Stateless(name = EpaymentFacadeBean.BEAN_NAME)
 public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRemote {
 
     static final String JNDI_CONFIG = "epayment/resource/Configuration";

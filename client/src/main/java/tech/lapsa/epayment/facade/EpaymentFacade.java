@@ -14,6 +14,8 @@ import tech.lapsa.java.commons.exceptions.IllegalState;
 
 public interface EpaymentFacade extends EJBConstants {
 
+    public static final String BEAN_NAME = "EpaymentFacadeBean";
+
     @Local
     public interface EpaymentFacadeLocal extends EpaymentFacade {
     }

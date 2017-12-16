@@ -16,6 +16,8 @@ import tech.lapsa.java.commons.function.MyStrings;
 
 public interface NotificationFacade extends EJBConstants {
 
+    public static final String BEAN_NAME = "NotificationFacadeBean";
+
     @Local
     public interface NotificationFacadeLocal extends NotificationFacade {
     }
