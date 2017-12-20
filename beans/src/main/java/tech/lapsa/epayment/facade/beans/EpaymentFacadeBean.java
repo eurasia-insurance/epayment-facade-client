@@ -134,7 +134,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public String invoiceAccept(final InvoiceBuilder builder) throws IllegalArgument {
+    public Invoice invoiceAccept(final InvoiceBuilder builder) throws IllegalArgument {
 	try {
 	    return _invoiceAccept(builder);
 	} catch (final IllegalArgumentException e) {
@@ -253,13 +253,13 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	}
     }
 
-    private String _invoiceAccept(final InvoiceBuilder builder) throws IllegalArgumentException {
+    private Invoice _invoiceAccept(final InvoiceBuilder builder) throws IllegalArgumentException {
 	MyObjects.requireNonNull(builder, "builder");
 
 	final Invoice temp;
 	try {
 	    temp = builder.build(qoDAO::isValidUniqueNumber);
-	} catch (IllegalArgumentException | NumberOfAttemptsExceedException | NonUniqueNumberException e1) {
+	} catch (NumberOfAttemptsExceedException | NonUniqueNumberException e1) {
 	    // it should not happens
 	    throw new EJBException(e1.getMessage());
 	}
@@ -288,7 +288,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    }
 	    logger.FINE.log("Payment accepted notification sent '%1$s'", i);
 	}
-	return i.getNumber();
+	return i;
     }
 
     private void _completeWithUnknownPayment(final String invoiceNumber, final Double paidAmount,

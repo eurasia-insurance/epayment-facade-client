@@ -30,7 +30,7 @@ public interface EpaymentFacade extends EJBConstants {
 
     boolean hasInvoiceWithNumber(String invoiceNumber) throws IllegalArgument;
 
-    String invoiceAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgument;
+    Invoice invoiceAccept(InvoiceBuilder invoiceBuilder) throws IllegalArgument;
 
     // qazkom type
 
