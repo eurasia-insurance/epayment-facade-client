@@ -55,27 +55,31 @@ public class NotificationFacadeBean implements NotificationFacadeLocal, Notifica
 
     private Destination resolveDestination(final Notification notification) throws IllegalArgumentException {
 	MyObjects.requireNonNull(notification, "notification");
-	switch (notification.getEvent()) {
+	out: switch (notification.getEvent()) {
 	case PAYMENT_SUCCESS:
 	    switch (notification.getChannel()) {
 	    case EMAIL:
 		switch (notification.getRecipientType()) {
 		case REQUESTER:
 		    return paymentSucessUserEmail;
-		default:
+		case COMPANY:
+		    break out;
 		}
-	    default:
+		break out;
 	    }
+	    break out;
 	case PAYMENT_LINK:
 	    switch (notification.getChannel()) {
 	    case EMAIL:
 		switch (notification.getRecipientType()) {
 		case REQUESTER:
 		    return paymentLinkUserEmail;
-		default:
+		case COMPANY:
+		    break out;
 		}
-	    default:
+		break out;
 	    }
+	    break out;
 	}
 	throw MyExceptions.format(IllegalArgumentException::new,
 		"Can't resolve Destination for channel '%2$s' recipient '%3$s' stage '%1$s'",
