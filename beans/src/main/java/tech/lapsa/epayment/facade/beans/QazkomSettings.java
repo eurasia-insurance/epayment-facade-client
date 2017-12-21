@@ -56,7 +56,7 @@ class QazkomSettings {
 
     final X509Certificate QAZKOM_BANK_CERTIFICATE;
 
-    QazkomSettings(final Properties qazkomConfig) throws IllegalArgumentException {
+    QazkomSettings(final Properties qazkomConfig) {
 
 	try {
 	    QAZKOM_EPAY_URI = new URI(qazkomConfig.getProperty(PROPERTY_BANK_EPAY_URL));

@@ -1,6 +1,6 @@
 package tech.lapsa.epayment.facade;
 
-public class InvoiceNotFound extends IllegalArgumentException {
+public class InvoiceNotFound extends Exception {
 
     private static final long serialVersionUID = 1L;
 
@@ -8,15 +8,15 @@ public class InvoiceNotFound extends IllegalArgumentException {
 	super();
     }
 
-    public InvoiceNotFound(String message, Throwable cause) {
+    public InvoiceNotFound(final String message, final Throwable cause) {
 	super(message, cause);
     }
 
-    public InvoiceNotFound(String s) {
+    public InvoiceNotFound(final String s) {
 	super(s);
     }
 
-    public InvoiceNotFound(Throwable cause) {
+    public InvoiceNotFound(final Throwable cause) {
 	super(cause);
     }
 

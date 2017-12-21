@@ -8,9 +8,19 @@ import java.util.Map;
 import tech.lapsa.java.commons.function.MyObjects;
 import tech.lapsa.java.commons.function.MyStrings;
 
-public interface PaymentMethod extends Serializable {
+public class PaymentMethod implements Serializable {
 
-    Http getHttp();
+    private static final long serialVersionUID = 1L;
+
+    private final Http http;
+
+    public PaymentMethod(final Http http) throws IllegalArgumentException {
+	this.http = MyObjects.requireNonNull(http, "http");
+    }
+
+    public Http getHttp() {
+	return http;
+    }
 
     public static final class Http implements Serializable {
 
@@ -20,7 +30,8 @@ public interface PaymentMethod extends Serializable {
 	final String httpMethod;
 	final Map<String, String> httpParams;
 
-	public Http(URI httpAddress, String httpMethod, Map<String, String> httpParams) {
+	public Http(final URI httpAddress, final String httpMethod, final Map<String, String> httpParams)
+		throws IllegalArgumentException {
 	    this.httpAddress = MyObjects.requireNonNull(httpAddress, "httpAddress");
 	    this.httpMethod = MyStrings.requireNonEmpty(httpMethod, "httpMethod");
 	    this.httpParams = Collections.unmodifiableMap(MyObjects.requireNonNull(httpParams, "httpParams"));
