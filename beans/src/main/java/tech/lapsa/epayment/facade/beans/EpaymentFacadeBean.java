@@ -444,6 +444,12 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 		    // it should not happens
 		    throw new EJBException(e1.getMessage());
 		}
+		try {
+		    temp = qoDAO.save(temp);
+		} catch (IllegalArgument e1) {
+		    // it should not happens
+		    throw new EJBException(e1.getMessage());
+		}
 	    }
 	    o = temp;
 	}
