@@ -160,6 +160,18 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void expireInvoice(final String invoiceNumber) throws IllegalArgument, IllegalState, InvoiceNotFound {
+	try {
+	    _expireInvoice(invoiceNumber);
+	} catch (final IllegalArgumentException e) {
+	    throw new IllegalArgument(e);
+	} catch (final IllegalStateException e) {
+	    throw new IllegalState(e);
+	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public String processQazkomFailure(final String failureXml) throws IllegalArgument {
 	try {
 	    return _processQazkomFailure(failureXml);
@@ -289,6 +301,27 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    logger.FINE.log("Payment accepted notification sent '%1$s'", i);
 	}
 	return i;
+    }
+
+    private void _expireInvoice(final String invoiceNumber)
+	    throws IllegalArgumentException, IllegalStateException, InvoiceNotFound {
+
+	MyStrings.requireNonEmpty(invoiceNumber, "invoiceNumber");
+
+	final Invoice i = _invoiceByNumber(invoiceNumber);
+
+	try {
+	    i.expire();
+	} catch (final IllegalState e) {
+	    // payment is inconsistent
+	    throw e.getRuntime();
+	}
+	try {
+	    invoiceDAO.save(i);
+	} catch (final IllegalArgument e) {
+	    // it should not happens
+	    throw new EJBException(e.getMessage());
+	}
     }
 
     private void _completeWithUnknownPayment(final String invoiceNumber, final Double paidAmount,
