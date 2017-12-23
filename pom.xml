@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>tech.lapsa.maven</groupId>
 		<artifactId>maven-general</artifactId>
-		<version>3.0</version>
+		<version>3.1</version>
 	</parent>
 
 	<groupId>tech.lapsa.epayment</groupId>
@@ -23,7 +22,7 @@
 
 	<properties>
 		<!-- BOMS -->
-		<javax-javaee-bom.version>7.0</javax-javaee-bom.version>
+		<javax-javaee-bom.version>7.0a-SNAPSHOT</javax-javaee-bom.version>
 		<java-commons.version>1.1-SNAPSHOT</java-commons.version>
 		<payara-bom.version>4.1.2-2-SNAPSHOT</payara-bom.version>
 		<!-- tech -->
