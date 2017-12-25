@@ -10,7 +10,7 @@
 	<artifactId>epayment-facade-app</artifactId>
 	<packaging>ear</packaging>
 
-	<name>Epayment Lib : Facade : EE Application</name>
+	<name>Epayment Lib : Facade : EAR</name>
 
 	<dependencies>
 		<dependency>
