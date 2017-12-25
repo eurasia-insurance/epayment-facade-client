@@ -30,8 +30,8 @@
 			<optional>false</optional>
 		</dependency>
 		<dependency>
-			<groupId>tech.lapsa.javax</groupId>
-			<artifactId>javax-jms-rpc</artifactId>
+			<groupId>tech.lapsa.lapsa</groupId>
+			<artifactId>lapsa-jms-rpc</artifactId>
 			<type>ejb</type>
 			<scope>compile</scope>
 			<optional>false</optional>
