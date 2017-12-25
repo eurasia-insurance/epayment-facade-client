@@ -15,8 +15,8 @@ import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
 import tech.lapsa.java.commons.exceptions.IllegalArgument;
 import tech.lapsa.java.commons.function.MyExceptions;
 import tech.lapsa.java.commons.function.MyObjects;
-import tech.lapsa.javax.jms.client.JmsClientFactory;
-import tech.lapsa.javax.jms.client.JmsEventNotificatorClient;
+import tech.lapsa.lapsa.jmsRPC.client.JmsClientFactory;
+import tech.lapsa.lapsa.jmsRPC.client.JmsEventNotificatorClient;
 
 @Stateless(name = NotificationFacade.BEAN_NAME)
 public class NotificationFacadeBean implements NotificationFacadeLocal, NotificationFacadeRemote {
