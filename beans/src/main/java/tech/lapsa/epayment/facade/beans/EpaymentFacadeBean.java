@@ -622,7 +622,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    final Instant paid = payment.getCreated();
 	    final Double amount = payment.getAmount();
 	    final Currency currency = payment.getCurrency();
-	    final String ref = payment.getReferenceNumber();
+	    final String ref = payment.getReference();
 	    final String invoiceNumber = invoice.getNumber();
 	    final String externalId = invoice.getExternalId();
 
