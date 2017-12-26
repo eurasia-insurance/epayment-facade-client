@@ -41,7 +41,7 @@ import tech.lapsa.epayment.facade.NotificationFacade.Notification.NotificationRe
 import tech.lapsa.epayment.facade.NotificationFacade.NotificationFacadeLocal;
 import tech.lapsa.epayment.facade.PaymentMethod;
 import tech.lapsa.epayment.facade.PaymentMethod.Http;
-import tech.lapsa.epayment.shared.entity.XmlInvoiceHasPaidEvent;
+import tech.lapsa.epayment.shared.entity.InvoiceHasPaidJmsEvent;
 import tech.lapsa.epayment.shared.jms.EpaymentDestinations;
 import tech.lapsa.java.commons.exceptions.IllegalArgument;
 import tech.lapsa.java.commons.exceptions.IllegalState;
@@ -564,7 +564,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 
     @Inject
     @JmsDestination(EpaymentDestinations.INVOICE_HAS_PAID)
-    private JmsEventNotificatorClient<XmlInvoiceHasPaidEvent> invoiceHasPaidEventNotificatorClient;
+    private JmsEventNotificatorClient<InvoiceHasPaidJmsEvent> invoiceHasPaidEventNotificatorClient;
 
     private void _invoiceHasPaidBy(final Invoice invoice, final Payment payment)
 	    throws IllegalArgumentException, IllegalStateException {
@@ -626,7 +626,7 @@ public class EpaymentFacadeBean implements EpaymentFacadeLocal, EpaymentFacadeRe
 	    final String invoiceNumber = invoice.getNumber();
 	    final String externalId = invoice.getExternalId();
 
-	    final XmlInvoiceHasPaidEvent ev = new XmlInvoiceHasPaidEvent();
+	    final InvoiceHasPaidJmsEvent ev = new InvoiceHasPaidJmsEvent();
 	    ev.setAmount(amount);
 	    ev.setCurrency(currency);
 	    ev.setInstant(paid);
