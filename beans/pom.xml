@@ -36,12 +36,6 @@
 			<optional>false</optional>
 		</dependency>
 		<dependency>
-			<groupId>tech.lapsa.payara</groupId>
-			<artifactId>payara-hibernate-validation</artifactId>
-			<scope>runtime</scope>
-			<optional>false</optional>
-		</dependency>
-		<dependency>
 			<groupId>tech.lapsa.epayment</groupId>
 			<artifactId>epayment-domain</artifactId>
 			<scope>compile</scope>
@@ -79,11 +73,6 @@
 		<dependency>
 			<groupId>javax.ejb</groupId>
 			<artifactId>javax.ejb-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

@@ -27,7 +27,6 @@
 		<payara-bom.version>4.1.2-2</payara-bom.version>
 		<!-- tech -->
 		<lapsa-jms-rpc.version>1.0</lapsa-jms-rpc.version>
-		<payara-hibernate-validation.version>1.1</payara-hibernate-validation.version>
 		<epayment-shared.version>1.0</epayment-shared.version>
 		<epayment-domain.version>4.0</epayment-domain.version>
 		<epayment-dao.version>1.1</epayment-dao.version>
@@ -91,11 +90,6 @@
 				<artifactId>lapsa-jms-rpc</artifactId>
 				<version>${lapsa-jms-rpc.version}</version>
 				<type>ejb</type>
-			</dependency>
-			<dependency>
-				<groupId>tech.lapsa.payara</groupId>
-				<artifactId>payara-hibernate-validation</artifactId>
-				<version>${payara-hibernate-validation.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>tech.lapsa.epayment</groupId>
