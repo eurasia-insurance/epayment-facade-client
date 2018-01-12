@@ -8,17 +8,11 @@
 	</parent>
 
 	<groupId>tech.lapsa.epayment</groupId>
-	<artifactId>epayment-facade-root</artifactId>
+	<artifactId>epayment-facade-client</artifactId>
 	<version>1.2-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<packaging>jar</packaging>
 
-	<name>Epayment Lib : Facade</name>
-
-	<modules>
-		<module>client</module>
-		<module>beans</module>
-		<module>app</module>
-	</modules>
+	<name>Epayment Lib : Facade : EJB-client</name>
 
 	<properties>
 		<!-- BOMS -->
@@ -26,10 +20,7 @@
 		<java-commons.version>1.2-SNAPSHOT</java-commons.version>
 		<payara-bom.version>4.1.2-2</payara-bom.version>
 		<!-- tech -->
-		<lapsa-jms-rpc.version>1.0</lapsa-jms-rpc.version>
-		<epayment-shared.version>1.0</epayment-shared.version>
 		<epayment-domain.version>4.0</epayment-domain.version>
-		<epayment-dao.version>1.1</epayment-dao.version>
 		<!-- oldies -->
 		<international-lib.version>3.3</international-lib.version>
 	</properties>
@@ -58,44 +49,7 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<dependency>
-				<groupId>tech.lapsa.epayment</groupId>
-				<artifactId>epayment-dao-root</artifactId>
-				<version>${epayment-dao.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<!-- own -->
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>epayment-facade-client</artifactId>
-				<version>${project.version}</version>
-				<type>jar</type>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>epayment-facade</artifactId>
-				<version>${project.version}</version>
-				<type>ejb</type>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>epayment-facade-app</artifactId>
-				<version>${project.version}</version>
-				<type>ear</type>
-			</dependency>
 			<!-- tech -->
-			<dependency>
-				<groupId>tech.lapsa.lapsa</groupId>
-				<artifactId>lapsa-jms-rpc</artifactId>
-				<version>${lapsa-jms-rpc.version}</version>
-				<type>ejb</type>
-			</dependency>
-			<dependency>
-				<groupId>tech.lapsa.epayment</groupId>
-				<artifactId>epayment-shared</artifactId>
-				<version>${epayment-shared.version}</version>
-			</dependency>
 			<dependency>
 				<groupId>tech.lapsa.epayment</groupId>
 				<artifactId>epayment-domain</artifactId>
@@ -112,15 +66,44 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<dependencies>
+		<!-- tech -->
+		<dependency>
+			<groupId>tech.lapsa.epayment</groupId>
+			<artifactId>epayment-domain</artifactId>
+			<scope>compile</scope>
+			<optional>false</optional>
+		</dependency>
+		<!-- oldies -->
+		<dependency>
+			<groupId>com.lapsa.international-lib</groupId>
+			<artifactId>international-core</artifactId>
+			<scope>compile</scope>
+			<optional>false</optional>
+		</dependency>
+		<!-- Payara -->
+		<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>org.eclipse.persistence.core</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!-- JavaEE -->
+		<dependency>
+			<groupId>javax.ejb</groupId>
+			<artifactId>javax.ejb-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
 	<scm>
-		<connection>scm:git:https://gitlab.lapsa.tech/lapsa/epayment/facade.git</connection>
-		<developerConnection>scm:git:https://gitlab.lapsa.tech/lapsa/epayment/facade.git</developerConnection>
+		<connection>scm:git:https://gitlab.lapsa.tech/lapsa/epayment/facade-client.git</connection>
+		<developerConnection>scm:git:https://gitlab.lapsa.tech/lapsa/epayment/facade-client.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
 	<issueManagement>
 		<system>gitlab</system>
-		<url>https://gitlab.lapsa.tech/lapsa/epayment/facade/issues</url>
+		<url>https://gitlab.lapsa.tech/lapsa/epayment/facade-client/issues</url>
 	</issueManagement>
 
 </project>
