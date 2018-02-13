@@ -98,7 +98,7 @@
 	<scm>
 		<connection>scm:git:https://gitlab.lapsa.tech/lapsa/epayment/facade-client.git</connection>
 		<developerConnection>scm:git:https://gitlab.lapsa.tech/lapsa/epayment/facade-client.git</developerConnection>
-		<tag>v1.2</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<issueManagement>
