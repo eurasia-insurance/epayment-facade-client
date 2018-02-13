@@ -20,7 +20,7 @@
 		<java-commons.version>1.2</java-commons.version>
 		<payara-bom.version>4.1.2-2</payara-bom.version>
 		<!-- tech -->
-		<epayment-domain.version>4.0</epayment-domain.version>
+		<epayment-domain.version>4.0.2a-SNAPSHOT</epayment-domain.version>
 		<!-- oldies -->
 		<international-lib.version>3.3</international-lib.version>
 	</properties>
