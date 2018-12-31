@@ -101,9 +101,4 @@
 		<tag>HEAD</tag>
 	</scm>
 
-	<issueManagement>
-		<system>gitlab</system>
-		<url>https://gitlab.lapsa.tech/lapsa/epayment/facade-client/issues</url>
-	</issueManagement>
-
 </project>
