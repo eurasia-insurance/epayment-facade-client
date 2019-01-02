@@ -9,7 +9,7 @@
 
 	<groupId>tech.lapsa.epayment</groupId>
 	<artifactId>epayment-facade-client</artifactId>
-	<version>CURRENT-SNAPSHOT</version>
+	<version>20190103</version>
 	<packaging>jar</packaging>
 
 	<name>Epayment Lib : Facade : EJB-client</name>
@@ -98,7 +98,7 @@
 	<scm>
 		<connection>scm:git:https://github.com/eurasia-insurance/epayment-facade-client.git</connection>
 		<developerConnection>scm:git:https://github.com/eurasia-insurance/epayment-facade-client.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>v20190103</tag>
 	</scm>
 
 </project>
