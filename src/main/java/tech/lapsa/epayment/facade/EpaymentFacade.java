@@ -46,6 +46,8 @@ public interface EpaymentFacade extends EJBConstants {
 
     // unknown type
 
+    void markInvoiceAsPaid(String invoiceNumber, Instant paymentInstant) throws IllegalArgument, IllegalState, InvoiceNotFound;
+
     void completeWithUnknownPayment(String invoiceNumber, Double paidAmount, Currency paidCurency, Instant paidInstant,
 	    String paidReference, String payerName) throws IllegalArgument, IllegalState, InvoiceNotFound;
 
