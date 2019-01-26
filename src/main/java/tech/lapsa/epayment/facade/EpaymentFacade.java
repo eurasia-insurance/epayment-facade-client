@@ -53,4 +53,6 @@ public interface EpaymentFacade extends EJBConstants {
 
     void expireInvoice(String invoiceNumber) throws IllegalArgument, IllegalState, InvoiceNotFound;
 
+    void cancelPayment(String invoiceNumber, String reason) throws IllegalArgument, IllegalState, InvoiceNotFound;
+
 }
