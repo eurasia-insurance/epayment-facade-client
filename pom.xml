@@ -16,13 +16,13 @@
 
 	<properties>
 		<!-- BOMS -->
-		<javax-javaee-bom.version>CURRENT-SNAPSHOT</javax-javaee-bom.version>
-		<java-commons.version>CURRENT-SNAPSHOT</java-commons.version>
-		<payara-bom.version>CURRENT-SNAPSHOT</payara-bom.version>
+		<javax-javaee-bom.version>20190317r6</javax-javaee-bom.version>
+		<java-commons.version>20190317r6</java-commons.version>
+		<payara-bom.version>20190317r6</payara-bom.version>
 		<!-- tech -->
-		<epayment-domain.version>CURRENT-SNAPSHOT</epayment-domain.version>
+		<epayment-domain.version>20190317r6</epayment-domain.version>
 		<!-- oldies -->
-		<international-lib.version>CURRENT-SNAPSHOT</international-lib.version>
+		<international-lib.version>20190317r6</international-lib.version>
 	</properties>
 
 	<dependencyManagement>
